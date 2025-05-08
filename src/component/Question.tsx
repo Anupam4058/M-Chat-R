@@ -306,8 +306,8 @@ const Question: React.FC<PropType> = ({
   };
 
   return (
-    <div className="w-full flex justify-center items-start min-h-[300px] mt-2">
-      <div className="bg-gradient-to-br from-white via-indigo-50 to-blue-100 rounded-2xl shadow-2xl border border-indigo-100 p-2 sm:p-4 md:p-6 w-full min-h-[60vh] mx-1 transition-all duration-300">
+    <div className="w-full max-w-3xl mx-4 sm:mx-auto">
+      <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         {/* Question Header */}
         <div className="mb-4 flex items-center gap-4">
           <span className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-2xl font-bold shadow-lg">

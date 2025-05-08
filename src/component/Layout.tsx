@@ -138,7 +138,7 @@ const Layout: React.FC<LayoutProps> = ({
         <div className="flex-1 flex flex-col min-h-screen bg-transparent">
           {/* Header with Hamburger Menu (only for Mobile) */}
           <header className="bg-white shadow-md sticky top-0 z-30 md:static md:shadow-none">
-            <div className="px-2 py-3 sm:px-4 sm:py-4 flex items-center justify-between md:justify-center max-w-4xl mx-auto">
+            <div className="px-4 py-3 sm:px-4 sm:py-4 flex items-center justify-between md:justify-center max-w-4xl mx-auto">
               <button
                 id="hamburger"
                 onClick={() => setIsSidebarOpen(true)}
@@ -156,7 +156,7 @@ const Layout: React.FC<LayoutProps> = ({
           </header>
 
           {/* Main Content Container */}
-          <main className="flex-1 flex flex-col items-center justify-center px-1 sm:px-4 pb-8 pt-4 sm:pt-8">
+          <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-4 pb-8 pt-4 sm:pt-8">
             <div className="w-full max-w-lg sm:max-w-3xl flex-1 flex items-center justify-center min-h-[400px]">
               {children}
             </div>
