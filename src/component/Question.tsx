@@ -27,6 +27,7 @@ interface PropType {
   handleNextQuestion: Function;
   handlePrevClick: Function;
   totalQuestions: number;
+  answer?: any;
 }
 
 const Question: React.FC<PropType> = ({
@@ -35,6 +36,7 @@ const Question: React.FC<PropType> = ({
   handleNextQuestion,
   handlePrevClick,
   totalQuestions,
+  answer,
 }) => {
   // State management for question answers and UI
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | "">("");
@@ -49,11 +51,28 @@ const Question: React.FC<PropType> = ({
 
   // Reset state when question changes
   useEffect(() => {
-    setMainAnswer("");
-    setIsPassCheckDone(false);
-    setIsSelectionOn(false);
-    setCurrentLayer(undefined);
-  }, [question]);
+    if (answer) {
+      setMainAnswer(answer.mainAnswer || "");
+      setSubAnswer(answer.subAnswer || []);
+      setCurrentSubQuestionIndex(answer.currentSubQuestionIndex || 0);
+      setCurrentLayer(answer.currentLayer || undefined);
+      setIsPassCheckDone(answer.isPassCheckDone || false);
+      setIsSelectionOn(answer.isSelectionOn || false);
+      setselectionAnswer(answer.selectionAnswer || []);
+      setpassCheck(answer.passCheck || undefined);
+      setSubAnswerProgress(answer.subAnswerProgress || 0);
+    } else {
+      setMainAnswer("");
+      setSubAnswer([]);
+      setCurrentSubQuestionIndex(0);
+      setCurrentLayer(undefined);
+      setIsPassCheckDone(false);
+      setIsSelectionOn(false);
+      setselectionAnswer([]);
+      setpassCheck(undefined);
+      setSubAnswerProgress(0);
+    }
+  }, [question, answer]);
 
   // Refs for animation handling
   const questionRefs = useRef<(HTMLDivElement | null)[]>([]);

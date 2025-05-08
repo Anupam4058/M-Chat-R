@@ -1,48 +1,49 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import Question from "../component/Question";
 import QuestionsData from "../data/questionsData";
 import { questionType } from "../types";
-import { useDispatch } from "react-redux";
-import { updateAnswer } from "../redux/Action";
+import { useDispatch, useSelector } from "react-redux";
+import { updateAnswer, setCurrentQuestion } from "../redux/Action";
 import { useNavigate } from "react-router-dom";
 import Layout from "../component/Layout";
+import { RootState } from "../redux/Store";
 
 const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [currentQuestion, setCurrentQuestion] = useState<questionType>(QuestionsData[0]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
-  const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
+  const answers = useSelector((state: RootState) => state.answers.answers);
+  const currentQuestionIndex = useSelector((state: RootState) => state.answers.currentQuestionIndex);
+
+  // Get the current question, merging with answer from Redux if available
+  const currentQuestion = React.useMemo(() => {
+    const base = QuestionsData[currentQuestionIndex];
+    const answer = answers?.[currentQuestionIndex];
+    return answer ? { ...base, ...answer } : base;
+  }, [currentQuestionIndex, answers]);
+
+  // List of answered question indices
+  const answeredQuestions = React.useMemo(() =>
+    answers ? answers.map((a) => a && a.index).filter((i) => i !== undefined) : [],
+    [answers]
+  );
 
   const handleNextQuestion = (index: number, answer: questionType) => {
-    dispatch(
-      updateAnswer({
-        ...answer,
-        index: index,
-      })
-    );
-    
-    setAnsweredQuestions(prev => Array.from(new Set([...prev, index])));
-    
+    dispatch(updateAnswer({ ...answer, index }));
+    dispatch(setCurrentQuestion(index + 1));
     if (index + 1 === QuestionsData.length) {
       navigate("/result");
       return;
     }
-    setCurrentQuestionIndex(index + 1);
-    setCurrentQuestion(QuestionsData[index + 1]);
   };
 
   const handlePrevClick = (index: number) => {
-    if (index === 0) {
-      return;
-    }
-    setCurrentQuestionIndex(index - 1);
-    setCurrentQuestion(QuestionsData[index - 1]);
+    if (index === 0) return;
+    dispatch(setCurrentQuestion(index - 1));
   };
 
+  // Allow navigation to any answered question
   const handleQuestionClick = (index: number) => {
-    setCurrentQuestionIndex(index);
-    setCurrentQuestion(QuestionsData[index]);
+    dispatch(setCurrentQuestion(index));
   };
 
   const questionContentRef = useRef<HTMLDivElement>(null);
@@ -50,11 +51,9 @@ const Home = () => {
   useEffect(() => {
     if (questionContentRef.current) {
       questionContentRef.current.classList.add("slide-in");
-
       const timer = setTimeout(() => {
         questionContentRef.current?.classList.remove("slide-in");
       }, 500);
-
       return () => clearTimeout(timer);
     }
   }, [currentQuestion]);
@@ -72,6 +71,7 @@ const Home = () => {
         handleNextQuestion={handleNextQuestion}
         handlePrevClick={handlePrevClick}
         totalQuestions={QuestionsData.length}
+        answer={answers?.[currentQuestionIndex]}
       />
     </Layout>
   );

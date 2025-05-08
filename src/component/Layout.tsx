@@ -99,12 +99,12 @@ const Layout: React.FC<LayoutProps> = ({
                 <button
                   key={index}
                   onClick={() => {
-                    if (index <= currentQuestionIndex) {
+                    if (answeredQuestions.includes(index) || currentQuestionIndex === index) {
                       onQuestionClick(index);
                       closeSidebarOnMobile();
                     }
                   }}
-                  disabled={index > currentQuestionIndex}
+                  disabled={!answeredQuestions.includes(index) && currentQuestionIndex !== index}
                   className={cn(
                     'w-full px-4 py-3 rounded-full transition-all duration-200 transform flex items-center mb-2 shadow-sm',
                     currentQuestionIndex === index
@@ -113,7 +113,7 @@ const Layout: React.FC<LayoutProps> = ({
                       ? 'bg-green-100 text-green-700 border-2 border-green-200 hover:scale-105'
                       : 'bg-red-50 text-red-500 border-2 border-red-200',
                     'overflow-hidden whitespace-nowrap',
-                    index > currentQuestionIndex ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                    !answeredQuestions.includes(index) && currentQuestionIndex !== index ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
                   )}
                   style={{maxWidth:'100%'}}
                 >
