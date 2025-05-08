@@ -2,7 +2,6 @@
 
 A modern, responsive web application for conducting the Modified Checklist for Autism in Toddlers, Revised (M-CHAT-R) questionnaire. This application provides an intuitive interface for healthcare professionals to administer the autism screening questionnaire.
 
-![M-CHAT-R Application](screenshots/app-preview.png)
 
 ## Features
 
@@ -64,13 +63,6 @@ src/
 └── context/          # React context providers
 ```
 
-## Usage
-
-1. Start the questionnaire by clicking "Begin"
-2. Answer each question with Yes/No
-3. Complete any sub-questions that appear
-4. Navigate between questions using the sidebar or navigation buttons
-5. View results on the final page
 
 ## Contributing
 
@@ -80,41 +72,6 @@ src/
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- M-CHAT-R/F is a copyrighted tool. For more information, visit [M-CHAT-R/F](https://mchatscreen.com)
-- This application is designed to assist healthcare professionals in administering the M-CHAT-R questionnaire
-- The questionnaire content and scoring methodology are based on the official M-CHAT-R guidelines
-
-## Contact
-
-Anupam - [@Anupam4058](https://github.com/Anupam4058)
-
-Project Link: [https://github.com/Anupam4058/M-Chat-RemotiQ](https://github.com/Anupam4058/M-Chat-RemotiQ)
-
-## Screenshots
-
-### Desktop View
-![Desktop View](screenshots/desktop-view.png)
-
-### Mobile View
-![Mobile View](screenshots/mobile-view.png)
-
-### Question Flow
-![Question Flow](screenshots/question-flow.png)
-
-## Future Enhancements
-
-- [ ] Add user authentication
-- [ ] Implement result history
-- [ ] Add export functionality for results
-- [ ] Include detailed scoring explanations
-- [ ] Add multi-language support
-- [ ] Implement offline functionality
 
 ## Support
 
