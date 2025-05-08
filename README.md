@@ -34,8 +34,8 @@ Before you begin, ensure you have the following installed:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/mchat-r-questionnaire.git
-cd mchat-r-questionnaire
+git clone https://github.com/Anupam4058/M-Chat-RemotiQ.git
+cd M-Chat-RemotiQ
 ```
 
 2. Install dependencies:
@@ -79,4 +79,48 @@ src/
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- M-CHAT-R/F is a copyrighted tool. For more information, visit [M-CHAT-R/F](https://mchatscreen.com)
+- This application is designed to assist healthcare professionals in administering the M-CHAT-R questionnaire
+- The questionnaire content and scoring methodology are based on the official M-CHAT-R guidelines
+
+## Contact
+
+Anupam - [@Anupam4058](https://github.com/Anupam4058)
+
+Project Link: [https://github.com/Anupam4058/M-Chat-RemotiQ](https://github.com/Anupam4058/M-Chat-RemotiQ)
+
+## Screenshots
+
+### Desktop View
+![Desktop View](screenshots/desktop-view.png)
+
+### Mobile View
+![Mobile View](screenshots/mobile-view.png)
+
+### Question Flow
+![Question Flow](screenshots/question-flow.png)
+
+## Future Enhancements
+
+- [ ] Add user authentication
+- [ ] Implement result history
+- [ ] Add export functionality for results
+- [ ] Include detailed scoring explanations
+- [ ] Add multi-language support
+- [ ] Implement offline functionality
+
+## Support
+
+If you find this project helpful, please give it a ⭐️ on GitHub!
+
+---
+
+**Note**: This application is intended for use by healthcare professionals and should be used in accordance with the official M-CHAT-R guidelines and protocols.
 
