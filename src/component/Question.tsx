@@ -310,23 +310,23 @@ const Question: React.FC<PropType> = ({
       <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         {/* Question Header */}
         <div className="mb-4 flex items-center gap-4">
-          <span className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-2xl font-bold shadow-lg">
+          <span className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-lg font-display font-bold shadow-lg">
             {questionNo + 1}
           </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{question.title}</h2>
+          <h2 className="text-lg text-justify sm:text-xl font-display font-bold text-gray-900">{question.title}</h2>
         </div>
         {/* Question Description */}
         {question.description && (
-          <p className="text-gray-600 mb-4 text-center italic text-xs sm:text-sm md:text-base">
+          <p className="text-gray-600 mb-4 text-center italic text-sm">
             (For example: {question.description})
           </p>
         )}
         {/* Main Answer Buttons */}
-        <div className="flex flex-col gap-4 w-full max-w-xl mx-auto mt-2">
+        <div className="flex flex-col gap-3 w-full max-w-xl mx-auto mt-2">
           <button
             onClick={() => onMainAnswerChange("yes")}
             className={cn(
-              "flex items-center w-full py-2 px-6 rounded-full text-lg font-semibold border-2 transition-all duration-200",
+              "flex items-center w-full py-2.5 px-6 rounded-full text-base font-display font-semibold border-2 transition-all duration-200",
               mainAnswer === "yes"
                 ? "border-transparent bg-gradient-to-r from-indigo-200 via-purple-200 to-indigo-100 text-indigo-800 scale-105 shadow-lg"
                 : "border-indigo-200 bg-gradient-to-r from-indigo-100/60 via-purple-100/60 to-white text-indigo-700 hover:scale-105 hover:border-indigo-400",
@@ -341,7 +341,7 @@ const Question: React.FC<PropType> = ({
           <button
             onClick={() => onMainAnswerChange("no")}
             className={cn(
-              "flex items-center w-full py-2 px-6 rounded-full text-lg font-semibold border-2 transition-all duration-200",
+              "flex items-center w-full py-2.5 px-6 rounded-full text-base font-display font-semibold border-2 transition-all duration-200",
               mainAnswer === "no"
                 ? "border-transparent bg-gradient-to-r from-purple-200 via-indigo-200 to-purple-100 text-indigo-800 scale-105 shadow-lg"
                 : "border-indigo-200 bg-gradient-to-r from-purple-100/60 via-indigo-100/60 to-white text-indigo-700 hover:scale-105 hover:border-indigo-400",
@@ -357,9 +357,9 @@ const Question: React.FC<PropType> = ({
 
         {/* Sub-Questions Section */}
         {mainAnswer && currentLayer && currentLayer.questions.length > 0 && (
-          <div className="mt-8 ml-8">
+          <div className="mt-8 mx-0 sm:mx-8">
             {!currentLayer.title ? (
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              <h3 className="text-lg text-justify font-semibold text-gray-800 mb-4">
                 {mainAnswer === "yes"
                   ? `"If yes then..." ${question.yesDescription}`
                   : `"If no then..." ${question.noDescription}`}
@@ -370,7 +370,12 @@ const Question: React.FC<PropType> = ({
               </h3>
             )}
 
-            <div className="space-y-4">
+            {/* Sub-question Progress Bar */}
+            <div className="mb-4">
+              <ProgressBar progress={subAnswerProgress} barWidth="w-full" bgColor="bg-indigo-500" />
+            </div>
+
+            <div className="space-y-4 max-w-xl mx-auto">
               {(() => {
                 const subQuestion = currentLayer.questions[currentSubQuestionIndex];
                 if (!subQuestion) return null;

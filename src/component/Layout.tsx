@@ -84,10 +84,10 @@ const Layout: React.FC<LayoutProps> = ({
           <div className="p-2 md:p-6 h-screen flex flex-col">
             {/* Sidebar Header */}
             <div className="flex items-center justify-between mb-4 md:mb-6">
-              <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-600 bg-clip-text text-transparent mb-2 md:mb-4">Progress Overview</h2>
+              <h2 className="text-base md:text-lg font-display font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-600 bg-clip-text text-transparent mb-2 md:mb-4">Progress Overview</h2>
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="md:hidden p-3 rounded-full hover:bg-gray-100 transition-colors duration-200 text-2xl"
+                className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 text-xl"
                 aria-label="Close sidebar"
               >
                 ×
@@ -149,7 +149,7 @@ const Layout: React.FC<LayoutProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <h1 className="text-lg sm:text-2xl font-bold text-indigo-800 text-center w-full">
+              <h1 className="text-2xl sm:text-xl font-display font-bold text-indigo-800 text-center w-full">
                 M-CHAT-R Questionnaire
               </h1>
             </div>
