@@ -391,6 +391,14 @@ const Question: React.FC<PropType> = ({
 
             {/* Sub-question Progress Bar */}
             <div className="mb-4">
+              <div className="flex justify-center items-center mb-2">
+                <span className="text-sm font-medium text-gray-600">
+                  {currentSubQuestionIndex + 1} of {currentLayer.questions.length} questions
+                </span>
+                {/* <span className="text-sm font-medium text-gray-600">
+                  {subAnswer.filter(ans => ans === 'yes' || ans === 'no').length} answered
+                </span> */}
+              </div>
               <ProgressBar progress={subAnswerProgress} barWidth="w-full" bgColor="bg-indigo-500" />
             </div>
 
