@@ -4,6 +4,7 @@
  * - Question-by-question results
  * - Pass/Fail status for each question
  * - Overall assessment
+ * - PDF download option
  */
 
 import React from "react";
@@ -11,10 +12,15 @@ import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import QuestionsData from "../data/questionsData"; // Add this import
 import { questionType, AnswerState } from "../types";
+import PDFDownload from "../component/PDFDownload";
 
 interface ResultAnswer extends questionType {
   index: number;
   answer?: "pass" | "fail";
+  subAnswers?: Array<{
+    title: string;
+    answer: "yes" | "no";
+  }>;
 }
 
 interface ReduxState {
@@ -31,24 +37,23 @@ const Result = () => {
   const routeAnswers = location.state?.answers as ResultAnswer[] | undefined;
   const results = location.state?.results || [];
 
-  // Safely merge answers with question data
-  // const results = (routeAnswers || reduxAnswers || []).map((ans) => {
-  //   const question = QuestionsData[ans.index];
-  //   return question 
-  //     ? { 
-  //         ...question,
-  //         index: ans.index,
-  //         answer: ans.answer 
-  //       }
-  //     : null;
-  // }).filter(Boolean) as ResultAnswer[]; // Filter out any null values
+  // Prepare data for PDF
+  const pdfData = results.map((result: ResultAnswer) => ({
+    title: result.title,
+    description: result.description,
+    answer: result.answer,
+    subAnswers: result.subAnswers || []
+  }));
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200 flex flex-col items-center justify-center py-8 px-2">
       <div className="w-full max-w-4xl bg-white/80 rounded-2xl shadow-2xl p-6 md:p-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-600 bg-clip-text text-transparent">
-          Results
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-600 bg-clip-text text-transparent">
+            Results
+          </h1>
+          <PDFDownload results={pdfData} />
+        </div>
         {results.length > 0 ? (
           <div className="relative overflow-x-auto rounded-xl shadow-md">
             <table className="w-full text-sm text-left text-gray-700">

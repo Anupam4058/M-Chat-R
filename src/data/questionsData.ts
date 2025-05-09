@@ -55,6 +55,7 @@ const QuestionsData: questionType[] = [
       "pretend to drink from an empty cup, pretend to talk on a phone, or pretend to feed a doll or stuffed animal?)",
     yesDescription:
       "Please give me an example of his/her pretend play. (If parent does not give a PASS example below, ask each individually.)",
+    noDescription: "",
     yesSelected: {
       questions: [
         { title: "Pretend to drink from a toy cup?", example: "pass" },
