@@ -1,53 +1,108 @@
+/**
+ * Home Page Component
+ * Main questionnaire page that handles:
+ * - Question navigation
+ * - Answer state management
+ * - Progress tracking
+ * - Results collection
+ */
+
 import React, { useEffect, useRef } from "react";
 import Question from "../component/Question";
+
 import QuestionsData from "../data/questionsData";
-import { questionType } from "../types";
+import { AnswerState, questionType } from "../types";
 import { useDispatch, useSelector } from "react-redux";
 import { updateAnswer, setCurrentQuestion } from "../redux/Action";
 import { useNavigate } from "react-router-dom";
 import Layout from "../component/Layout";
 import { RootState } from "../redux/Store";
 
+// Type definitions for answer entries and Redux state
+interface AnswerEntry {
+  index: number;
+  answer: AnswerState;
+}
+
+interface ReduxState {
+  answers: {
+    answers: AnswerEntry[];
+    currentQuestionIndex: number;
+  };
+}
+
 const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const answers = useSelector((state: RootState) => state.answers.answers);
-  const currentQuestionIndex = useSelector((state: RootState) => state.answers.currentQuestionIndex);
+  
+  // Get current state from Redux store
+  const answers = useSelector((state: ReduxState) => state.answers.answers);
+  const currentQuestionIndex = useSelector((state: ReduxState) => state.answers.currentQuestionIndex);
 
-  // Get the current question, merging with answer from Redux if available
+  // Find current answer and question
+  const currentAnswer = answers.find((a: AnswerEntry) => a.index === currentQuestionIndex)?.answer;
   const currentQuestion = React.useMemo(() => {
     const base = QuestionsData[currentQuestionIndex];
-    const answer = answers?.[currentQuestionIndex];
-    return answer ? { ...base, ...answer } : base;
-  }, [currentQuestionIndex, answers]);
+    return currentAnswer ? { ...base, ...currentAnswer } : base;
+  }, [currentQuestionIndex, currentAnswer]);
 
-  // List of answered question indices
+  // Track answered questions
   const answeredQuestions = React.useMemo(() =>
-    answers ? answers.map((a) => a && a.index).filter((i) => i !== undefined) : [],
+    answers
+      ? answers
+          .map((a: AnswerEntry) => a?.index)
+          .filter((i: number | undefined): i is number => i !== undefined)
+      : [],
     [answers]
   );
 
-  const handleNextQuestion = (index: number, answer: questionType) => {
-    dispatch(updateAnswer({ ...answer, index }));
-    dispatch(setCurrentQuestion(index + 1));
+  /**
+   * Handles moving to the next question
+   * @param index - Current question index
+   * @param answerState - Current answer state
+   */
+  const handleNextQuestion = (index: number, answerState: AnswerState) => {
+    // Create a complete answer object including the pass/fail result
+    const completeAnswer = {
+      ...answerState,
+      answer: answerState.passCheck
+    };
+
+    dispatch(updateAnswer(index, answerState));
+    
     if (index + 1 === QuestionsData.length) {
-      navigate("/result");
-      return;
+      // Prepare final data before navigating to results
+      const finalResults = QuestionsData.map((q, i) => ({
+        ...q,
+        index: i,
+        answer: answers[i]?.answer?.passCheck || "fail"
+      }));
+      
+      navigate("/result", { state: { results: finalResults } });
+    } else {
+      dispatch(setCurrentQuestion(index + 1));
     }
   };
 
+  /**
+   * Handles moving to the previous question
+   * @param index - Current question index
+   */
   const handlePrevClick = (index: number) => {
     if (index === 0) return;
     dispatch(setCurrentQuestion(index - 1));
   };
 
-  // Allow navigation to any answered question
+  /**
+   * Handles direct question navigation
+   * @param index - Target question index
+   */
   const handleQuestionClick = (index: number) => {
     dispatch(setCurrentQuestion(index));
   };
 
+  // Animation handling
   const questionContentRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (questionContentRef.current) {
       questionContentRef.current.classList.add("slide-in");
@@ -71,7 +126,7 @@ const Home = () => {
         handleNextQuestion={handleNextQuestion}
         handlePrevClick={handlePrevClick}
         totalQuestions={QuestionsData.length}
-        answer={answers?.[currentQuestionIndex]}
+        answer={currentAnswer}
       />
     </Layout>
   );

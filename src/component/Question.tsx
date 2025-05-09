@@ -30,14 +30,14 @@ interface PropType {
   answer?: any;
 }
 
-const Question: React.FC<PropType> = ({
+const Question = ({
   question,
   questionNo,
   handleNextQuestion,
   handlePrevClick,
   totalQuestions,
   answer,
-}) => {
+}: PropType) => {
   // State management for question answers and UI
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | "">("");
   const [subAnswer, setSubAnswer] = useState<("yes" | "no")[] | []>([]);
@@ -307,7 +307,7 @@ const Question: React.FC<PropType> = ({
    * @param condition - Condition to validate against
    */
   const handleValidation = (subAnswerList: ("yes" | "no")[], condition: passConditionType | nextLayerConditionType ) => {
-    let passCheck = handlePassFailCheck(subAnswerList, condition);
+    const passCheck = handlePassFailCheck(subAnswerList, condition);
 
     if (passCheck === "both") {
       setIsSelectionOn(true);
@@ -319,7 +319,9 @@ const Question: React.FC<PropType> = ({
       setSubAnswerProgress(0);
       setSubAnswer([]);
     } else {
-      setpassCheck(passCheck ? "pass" : "fail");
+      // Only set the state, don't navigate
+      const result = passCheck === true ? "pass" : passCheck === false ? "fail" : undefined;
+      setpassCheck(result);
       setIsPassCheckDone(true);
     }
   };
@@ -477,7 +479,16 @@ const Question: React.FC<PropType> = ({
             Previous
           </button>
           <button
-            onClick={() => handleNextQuestion(questionNo, { ...question, answer: passCheck })}
+            onClick={() => handleNextQuestion(questionNo, {  mainAnswer,
+              subAnswer,
+              currentSubQuestionIndex,
+              currentLayer,
+              isPassCheckDone,
+              isSelectionOn,
+              selectionAnswer,
+              passCheck,
+              subAnswerProgress,
+            })}
             disabled={
               !mainAnswer ||
               (currentLayer && currentLayer.questions.length > 0 && subAnswer.length !== currentLayer.questions.length) ||

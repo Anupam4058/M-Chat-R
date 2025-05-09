@@ -53,3 +53,16 @@ export type questionType = {
   noSelected: noSelectedType;
   answer?: "pass" | "fail";
 };
+
+// NEW: Answer state type definition
+export type AnswerState = {
+  mainAnswer: "yes" | "no" | "";
+  subAnswer: ("yes" | "no")[];
+  currentSubQuestionIndex: number;
+  currentLayer?: yesSelectedType | noSelectedType;
+  isPassCheckDone: boolean;
+  isSelectionOn: boolean;
+  selectionAnswer: exampleQuestionType[];
+  passCheck?: "pass" | "fail";
+  subAnswerProgress: number;
+};
