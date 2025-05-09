@@ -326,6 +326,19 @@ const Question = ({
     }
   };
 
+  // Add these new functions after the existing handlers
+  const handlePrevSubQuestion = () => {
+    if (currentSubQuestionIndex > 0) {
+      setCurrentSubQuestionIndex(currentSubQuestionIndex - 1);
+    }
+  };
+
+  const handleNextSubQuestion = () => {
+    if (currentLayer?.questions && currentSubQuestionIndex < currentLayer.questions.length - 1) {
+      setCurrentSubQuestionIndex(currentSubQuestionIndex + 1);
+    }
+  };
+
   return (
     <div className="w-full max-w-3xl mx-4 sm:mx-auto">
       <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
@@ -397,69 +410,106 @@ const Question = ({
                 <span className="text-sm font-medium text-gray-600">
                   {currentSubQuestionIndex + 1} of {currentLayer.questions.length} questions
                 </span>
-                {/* <span className="text-sm font-medium text-gray-600">
-                  {subAnswer.filter(ans => ans === 'yes' || ans === 'no').length} answered
-                </span> */}
               </div>
               <ProgressBar progress={subAnswerProgress} barWidth="w-full" bgColor="bg-indigo-500" />
             </div>
 
-            <div className="space-y-4 max-w-xl mx-auto">
-              {(() => {
-                const subQuestion = currentLayer.questions[currentSubQuestionIndex];
-                if (!subQuestion) return null;
-                return (
-                  <div
-                    key={currentSubQuestionIndex}
-                    ref={(el) => {
-                      if (questionRefs.current) {
-                        questionRefs.current[currentSubQuestionIndex] = el;
-                      }
-                    }}
-                    className={cn(
-                      "p-4 rounded-lg border-2 transition-all duration-300 transform hover:scale-[1.02]",
-                      "border-indigo-500 bg-indigo-50"
-                    )}
-                  >
-                    <div className="flex items-start">
-                      <span className="text-indigo-600 font-semibold mr-3">{currentSubQuestionIndex + 1}.</span>
-                      <p className="text-gray-700">{subQuestion.title}</p>
+            <div className="space-y-4 max-w-xl mx-auto relative">
+              {/* Navigation Arrows - Updated for better mobile responsiveness */}
+              <div className="absolute -left-4 sm:-left-12 top-1/2 transform -translate-y-1/2 flex flex-col gap-2 z-10">
+                <button
+                  onClick={handlePrevSubQuestion}
+                  disabled={currentSubQuestionIndex === 0}
+                  className={cn(
+                    "p-1.5 sm:p-2 rounded-full transition-all duration-200 shadow-md",
+                    currentSubQuestionIndex === 0
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-200"
+                  )}
+                  aria-label="Previous sub-question"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              </div>
+              <div className="absolute -right-4 sm:-right-12 top-1/2 transform -translate-y-1/2 flex flex-col gap-2 z-10">
+                <button
+                  onClick={handleNextSubQuestion}
+                  disabled={currentSubQuestionIndex === (currentLayer?.questions.length || 0) - 1}
+                  className={cn(
+                    "p-1.5 sm:p-2 rounded-full transition-all duration-200 shadow-md",
+                    currentSubQuestionIndex === (currentLayer?.questions.length || 0) - 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-200"
+                  )}
+                  aria-label="Next sub-question"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Add padding to prevent content overlap with arrows on mobile */}
+              <div className="px-6 sm:px-0">
+                {/* Existing sub-question content */}
+                {(() => {
+                  const subQuestion = currentLayer.questions[currentSubQuestionIndex];
+                  if (!subQuestion) return null;
+                  return (
+                    <div
+                      key={currentSubQuestionIndex}
+                      ref={(el) => {
+                        if (questionRefs.current) {
+                          questionRefs.current[currentSubQuestionIndex] = el;
+                        }
+                      }}
+                      className={cn(
+                        "p-4 rounded-lg border-2 transition-all duration-300 transform hover:scale-[1.02]",
+                        "border-indigo-500 bg-indigo-50"
+                      )}
+                    >
+                      <div className="flex items-start">
+                        <span className="text-indigo-600 font-semibold mr-3">{currentSubQuestionIndex + 1}.</span>
+                        <p className="text-gray-700">{subQuestion.title}</p>
+                      </div>
+                      <div className="flex flex-col gap-4 mt-3 ml-0">
+                        <button
+                          onClick={() => onSubAnswerChange("yes", currentSubQuestionIndex)}
+                          className={cn(
+                            "flex items-center w-full py-2 px-6 rounded-full text-lg font-semibold border-2 transition-all duration-200",
+                            subAnswer[currentSubQuestionIndex] === "yes"
+                              ? "border-transparent bg-gradient-to-r from-indigo-200 via-purple-200 to-indigo-100 text-indigo-800 scale-105 shadow-lg"
+                              : "border-indigo-200 bg-gradient-to-r from-indigo-100/60 via-purple-100/60 to-white text-indigo-700 hover:scale-105 hover:border-indigo-400",
+                            "focus:outline-none"
+                          )}
+                        >
+                          {subAnswer[currentSubQuestionIndex] === "yes" && (
+                            <span className="mr-3 text-2xl">✔️</span>
+                          )}
+                          Yes
+                        </button>
+                        <button
+                          onClick={() => onSubAnswerChange("no", currentSubQuestionIndex)}
+                          className={cn(
+                            "flex items-center w-full py-2 px-6 rounded-full text-lg font-semibold border-2 transition-all duration-200",
+                            subAnswer[currentSubQuestionIndex] === "no"
+                              ? "border-transparent bg-gradient-to-r from-purple-200 via-indigo-200 to-purple-100 text-indigo-800 scale-105 shadow-lg"
+                              : "border-indigo-200 bg-gradient-to-r from-purple-100/60 via-indigo-100/60 to-white text-indigo-700 hover:scale-105 hover:border-indigo-400",
+                            "focus:outline-none"
+                          )}
+                        >
+                          {subAnswer[currentSubQuestionIndex] === "no" && (
+                            <span className="mr-3 text-2xl">✔️</span>
+                          )}
+                          No
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-4 mt-3 ml-0">
-                      <button
-                        onClick={() => onSubAnswerChange("yes", currentSubQuestionIndex)}
-                        className={cn(
-                          "flex items-center w-full py-2 px-6 rounded-full text-lg font-semibold border-2 transition-all duration-200",
-                          subAnswer[currentSubQuestionIndex] === "yes"
-                            ? "border-transparent bg-gradient-to-r from-indigo-200 via-purple-200 to-indigo-100 text-indigo-800 scale-105 shadow-lg"
-                            : "border-indigo-200 bg-gradient-to-r from-indigo-100/60 via-purple-100/60 to-white text-indigo-700 hover:scale-105 hover:border-indigo-400",
-                          "focus:outline-none"
-                        )}
-                      >
-                        {subAnswer[currentSubQuestionIndex] === "yes" && (
-                          <span className="mr-3 text-2xl">✔️</span>
-                        )}
-                        Yes
-                      </button>
-                      <button
-                        onClick={() => onSubAnswerChange("no", currentSubQuestionIndex)}
-                        className={cn(
-                          "flex items-center w-full py-2 px-6 rounded-full text-lg font-semibold border-2 transition-all duration-200",
-                          subAnswer[currentSubQuestionIndex] === "no"
-                            ? "border-transparent bg-gradient-to-r from-purple-200 via-indigo-200 to-purple-100 text-indigo-800 scale-105 shadow-lg"
-                            : "border-indigo-200 bg-gradient-to-r from-purple-100/60 via-indigo-100/60 to-white text-indigo-700 hover:scale-105 hover:border-indigo-400",
-                          "focus:outline-none"
-                        )}
-                      >
-                        {subAnswer[currentSubQuestionIndex] === "no" && (
-                          <span className="mr-3 text-2xl">✔️</span>
-                        )}
-                        No
-                      </button>
-                    </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
+              </div>
             </div>
           </div>
         )}
