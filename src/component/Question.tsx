@@ -124,13 +124,17 @@ const Question = ({
     arr[index] = answer;
     setSubAnswer(arr);
     if (currentLayer?.questions) {
+      // Calculate progress based on answered questions only
+      const answeredQuestions = arr.filter(ans => ans === 'yes' || ans === 'no').length;
       setSubAnswerProgress(
-        ((currentSubQuestionIndex + 1) * 100) / currentLayer?.questions.length
+        (answeredQuestions * 100) / currentLayer.questions.length
       );
     }
     if (currentLayer?.questions) {
       if (currentLayer.questions.length - 1 === index) {
-        setSubAnswerProgress(100);
+        // Only set progress to 100 if all questions are answered
+        const allAnswered = arr.filter(ans => ans === 'yes' || ans === 'no').length === currentLayer.questions.length;
+        setSubAnswerProgress(allAnswered ? 100 : (arr.filter(ans => ans === 'yes' || ans === 'no').length * 100) / currentLayer.questions.length);
         handleValidation(arr, currentLayer.passCondition);
         return;
       }
@@ -408,7 +412,7 @@ const Question = ({
             <div className="mb-4">
               <div className="flex justify-center items-center mb-2">
                 <span className="text-sm font-medium text-gray-600">
-                  {currentSubQuestionIndex + 1} of {currentLayer.questions.length} questions
+                  {subAnswer.filter(ans => ans === 'yes' || ans === 'no').length} of {currentLayer.questions.length} questions answered
                 </span>
               </div>
               <ProgressBar progress={subAnswerProgress} barWidth="w-full" bgColor="bg-indigo-500" />
@@ -541,14 +545,18 @@ const Question = ({
             })}
             disabled={
               !mainAnswer ||
-              (currentLayer && currentLayer.questions.length > 0 && subAnswer.length !== currentLayer.questions.length) ||
-              (currentLayer && currentLayer.questions.length > 0 && subAnswer.some(ans => ans !== 'yes' && ans !== 'no'))
+              (currentLayer && currentLayer.questions.length > 0 && 
+               (subAnswerProgress < 100 || 
+                subAnswer.length !== currentLayer.questions.length ||
+                subAnswer.some(ans => ans !== 'yes' && ans !== 'no')))
             }
             className={cn(
               "px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105",
               (!mainAnswer ||
-                (currentLayer && currentLayer.questions.length > 0 && subAnswer.length !== currentLayer.questions.length) ||
-                (currentLayer && currentLayer.questions.length > 0 && subAnswer.some(ans => ans !== 'yes' && ans !== 'no')))
+                (currentLayer && currentLayer.questions.length > 0 && 
+                 (subAnswerProgress < 100 || 
+                  subAnswer.length !== currentLayer.questions.length ||
+                  subAnswer.some(ans => ans !== 'yes' && ans !== 'no'))))
                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-r from-indigo-200 via-purple-200 to-indigo-100 text-indigo-800 border-0 shadow-md"
             )}
