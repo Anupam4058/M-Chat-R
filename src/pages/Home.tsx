@@ -62,13 +62,13 @@ const Home = () => {
    * @param answerState - Current answer state
    */
   const handleNextQuestion = (index: number, answerState: AnswerState) => {
-    // Create a complete answer object including the pass/fail result
+    // Save the simplified answer state
     const completeAnswer = {
       ...answerState,
-      answer: answerState.passCheck
+      answer: answerState.passCheck,
     };
 
-    dispatch(updateAnswer(index, answerState));
+    dispatch(updateAnswer(index, completeAnswer));
     
     if (index + 1 === QuestionsData.length) {
       // Prepare final data before navigating to results

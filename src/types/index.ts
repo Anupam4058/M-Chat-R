@@ -1,46 +1,13 @@
-export type passConditionType =
-  | "all-yes"
-  | "all-no"
-  | "any-yes"
-  | "any-no"
-  | "max-yes"
-  | "max-no"
-  | "pass-direct"
-  | "fail-direct"
-  | "yes-to-only-pass-fail"
-  | "yes-to-one-or-less"
-  | "yes-to-two-or-more"
-  | "next-layer";
-
-export type nextLayerConditionType =
-  | "yes-to-two-or-more"
-  | "yes-to-only-one"
-  | "all-no"
-  | "all-yes"
-
-export type exampleQuestionType = {
-  title: string;
-  example?: "pass" | "fail" | "";
-};
+export type passConditionType = "pass-direct" | "fail-direct";
 
 export type yesSelectedType = {
-  title?: string;
-  questions: exampleQuestionType[] | [];
-  passCondition: passConditionType ;
-  allSelectionRequired?: boolean;
-  answer?: any;
-  nextLayer?: yesSelectedType;
-  nextLayerCondition?: nextLayerConditionType;
+  questions: [];
+  passCondition: passConditionType;
 };
 
 export type noSelectedType = {
-  title?: string;
-  questions: exampleQuestionType[] | [];
-  passCondition: passConditionType ;
-  allSelectionRequired?: boolean;
-  answer?: any;
-  nextLayer?: noSelectedType;
-  nextLayerCondition?: nextLayerConditionType;
+  questions: [];
+  passCondition: passConditionType;
 };
 
 export type questionType = {
@@ -54,15 +21,8 @@ export type questionType = {
   answer?: "pass" | "fail";
 };
 
-// NEW: Answer state type definition
+// Simplified Answer state type definition
 export type AnswerState = {
   mainAnswer: "yes" | "no" | "";
-  subAnswer: ("yes" | "no")[];
-  currentSubQuestionIndex: number;
-  currentLayer?: yesSelectedType | noSelectedType;
-  isPassCheckDone: boolean;
-  isSelectionOn: boolean;
-  selectionAnswer: exampleQuestionType[];
   passCheck?: "pass" | "fail";
-  subAnswerProgress: number;
 };
