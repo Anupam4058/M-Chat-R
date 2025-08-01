@@ -62,10 +62,18 @@ const Home = () => {
    * @param answerState - Current answer state
    */
   const handleNextQuestion = (index: number, answerState: AnswerState) => {
-    // Save the simplified answer state
+    // Always save the full answer state, including currentLayer and subAnswer
     const completeAnswer = {
       ...answerState,
       answer: answerState.passCheck,
+      currentLayer: answerState.currentLayer,
+      subAnswer: answerState.subAnswer,
+      currentSubQuestionIndex: answerState.currentSubQuestionIndex,
+      isPassCheckDone: answerState.isPassCheckDone,
+      passCheck: answerState.passCheck,
+      subAnswerProgress: answerState.subAnswerProgress,
+      isSelectionOn: answerState.isSelectionOn,
+      selectionAnswer: answerState.selectionAnswer,
     };
 
     dispatch(updateAnswer(index, completeAnswer));

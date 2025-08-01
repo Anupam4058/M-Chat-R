@@ -39,6 +39,18 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: '#4b5563',
   },
+  subQuestion: {
+    fontSize: 12,
+    marginLeft: 20,
+    marginBottom: 3,
+    color: '#4b5563',
+  },
+  subAnswer: {
+    fontSize: 12,
+    marginLeft: 40,
+    marginBottom: 3,
+    color: '#059669',
+  },
   result: {
     fontSize: 12,
     marginLeft: 20,
@@ -62,8 +74,11 @@ interface ResultPDFProps {
     title: string;
     description?: string;
     mainAnswer?: string;
-    passCheck?: "pass" | "fail";
     answer?: "pass" | "fail";
+    subAnswers?: Array<{
+      title: string;
+      answer: "yes" | "no";
+    }>;
   }>;
 }
 
@@ -79,17 +94,32 @@ const ResultPDF: React.FC<ResultPDFProps> = ({ results }) => (
               {index + 1}. {question.title}
             </Text>
             {question.description && (
-              <Text style={styles.mainAnswer}>
+              <Text style={styles.subQuestion}>
                 Description: {question.description}
               </Text>
             )}
             {question.mainAnswer && (
               <Text style={styles.mainAnswer}>
-                Answer: {question.mainAnswer.toUpperCase()}
+                Main Answer: {question.mainAnswer.toUpperCase()}
               </Text>
             )}
+            {question.subAnswers && question.subAnswers.length > 0 && (
+              <View>
+                <Text style={styles.subQuestion}>Sub-questions:</Text>
+                {question.subAnswers.map((subAnswer, subIndex) => (
+                  <View key={subIndex}>
+                    <Text style={styles.subQuestion}>
+                      • {subAnswer.title}
+                    </Text>
+                    <Text style={styles.subAnswer}>
+                      Answer: {subAnswer.answer.toUpperCase()}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
             <Text style={styles.result}>
-              Final Result: {(question.passCheck || question.answer || 'Not Answered').toUpperCase()}
+              Final Result: {question.answer?.toUpperCase() || 'Not Answered'}
             </Text>
           </View>
         ))}

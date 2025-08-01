@@ -9,6 +9,10 @@ interface PDFDownloadProps {
     title: string;
     description?: string;
     answer?: "pass" | "fail";
+    subAnswers?: Array<{
+      title: string;
+      answer: "yes" | "no";
+    }>;
   }>;
 }
 
@@ -32,7 +36,10 @@ const PDFDownload: React.FC<PDFDownloadProps> = ({ results }) => {
     return {
       ...result,
       mainAnswer: reduxAnswer?.mainAnswer || '',
-      passCheck: reduxAnswer?.passCheck || 'fail'
+      subAnswers: reduxAnswer?.subAnswer?.map((answer, idx) => ({
+        title: reduxAnswer?.currentLayer?.questions[idx]?.title || `Sub-question ${idx + 1}`,
+        answer: answer
+      })) || []
     };
   });
 
