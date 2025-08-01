@@ -1,142 +1,105 @@
 /**
  * Home Page Component
- * Main questionnaire page that handles:
- * - Question navigation
- * - Answer state management
- * - Progress tracking
- * - Results collection
+ * Main landing page for the M-CHAT questionnaire
  */
 
-import React, { useEffect, useRef } from "react";
-import Question from "../component/Question";
-
-import QuestionsData from "../data/questionsData";
-import { AnswerState, questionType } from "../types";
-import { useDispatch, useSelector } from "react-redux";
-import { updateAnswer, setCurrentQuestion } from "../redux/Action";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "../component/Layout";
-import { RootState } from "../redux/Store";
-
-// Type definitions for answer entries and Redux state
-interface AnswerEntry {
-  index: number;
-  answer: AnswerState;
-}
-
-interface ReduxState {
-  answers: {
-    answers: AnswerEntry[];
-    currentQuestionIndex: number;
-  };
-}
 
 const Home = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  // Get current state from Redux store
-  const answers = useSelector((state: ReduxState) => state.answers.answers);
-  const currentQuestionIndex = useSelector((state: ReduxState) => state.answers.currentQuestionIndex);
-
-  // Find current answer and question
-  const currentAnswer = answers.find((a: AnswerEntry) => a.index === currentQuestionIndex)?.answer;
-  const currentQuestion = React.useMemo(() => {
-    const base = QuestionsData[currentQuestionIndex];
-    return currentAnswer ? { ...base, ...currentAnswer } : base;
-  }, [currentQuestionIndex, currentAnswer]);
-
-  // Track answered questions
-  const answeredQuestions = React.useMemo(() =>
-    answers
-      ? answers
-          .map((a: AnswerEntry) => a?.index)
-          .filter((i: number | undefined): i is number => i !== undefined)
-      : [],
-    [answers]
-  );
-
-  /**
-   * Handles moving to the next question
-   * @param index - Current question index
-   * @param answerState - Current answer state
-   */
-  const handleNextQuestion = (index: number, answerState: AnswerState) => {
-    // Always save the full answer state, including currentLayer and subAnswer
-    const completeAnswer = {
-      ...answerState,
-      answer: answerState.passCheck,
-      currentLayer: answerState.currentLayer,
-      subAnswer: answerState.subAnswer,
-      currentSubQuestionIndex: answerState.currentSubQuestionIndex,
-      isPassCheckDone: answerState.isPassCheckDone,
-      passCheck: answerState.passCheck,
-      subAnswerProgress: answerState.subAnswerProgress,
-      isSelectionOn: answerState.isSelectionOn,
-      selectionAnswer: answerState.selectionAnswer,
-    };
-
-    dispatch(updateAnswer(index, completeAnswer));
-    
-    if (index + 1 === QuestionsData.length) {
-      // Prepare final data before navigating to results
-      const finalResults = QuestionsData.map((q, i) => ({
-        ...q,
-        index: i,
-        answer: answers[i]?.answer?.passCheck || "fail"
-      }));
-      
-      navigate("/result", { state: { results: finalResults } });
-    } else {
-      dispatch(setCurrentQuestion(index + 1));
-    }
-  };
-
-  /**
-   * Handles moving to the previous question
-   * @param index - Current question index
-   */
-  const handlePrevClick = (index: number) => {
-    if (index === 0) return;
-    dispatch(setCurrentQuestion(index - 1));
-  };
-
-  /**
-   * Handles direct question navigation
-   * @param index - Target question index
-   */
-  const handleQuestionClick = (index: number) => {
-    dispatch(setCurrentQuestion(index));
-  };
-
-  // Animation handling
-  const questionContentRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (questionContentRef.current) {
-      questionContentRef.current.classList.add("slide-in");
-      const timer = setTimeout(() => {
-        questionContentRef.current?.classList.remove("slide-in");
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [currentQuestion]);
-
   return (
-    <Layout
-      currentQuestionIndex={currentQuestionIndex}
-      totalQuestions={QuestionsData.length}
-      onQuestionClick={handleQuestionClick}
-      answeredQuestions={answeredQuestions}
-    >
-      <Question
-        question={currentQuestion}
-        questionNo={currentQuestionIndex}
-        handleNextQuestion={handleNextQuestion}
-        handlePrevClick={handlePrevClick}
-        totalQuestions={QuestionsData.length}
-        answer={currentAnswer}
-      />
-    </Layout>
+    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200 flex flex-col items-center justify-center py-8 px-2">
+      <div className="w-full max-w-4xl bg-white/80 rounded-2xl shadow-2xl p-6 md:p-10">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-600 bg-clip-text text-transparent mb-4">
+            M-CHAT Assessment
+          </h1>
+          <p className="text-xl text-gray-600 font-medium">
+            Modified Checklist for Autism in Toddlers
+          </p>
+        </div>
+        
+        <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-100 rounded-xl p-8 mb-8 border border-indigo-200">
+          <h2 className="text-2xl font-semibold text-indigo-800 mb-6 text-center">
+            Welcome to the M-CHAT Assessment
+          </h2>
+          
+          <div className="space-y-6 text-gray-700">
+            <p className="text-lg leading-relaxed text-gray-700">
+              The M-CHAT (Modified Checklist for Autism in Toddlers) is a screening tool designed to identify early signs of autism spectrum disorder in children between 16 and 30 months of age.
+            </p>
+
+            <div className="mt-8 space-y-4">
+              <button
+                onClick={() => navigate("/child-info")}
+                className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                Start New Assessment
+              </button>
+              
+              <button
+                onClick={() => navigate("/result")}
+                className="w-full py-4 px-6 bg-gray-600 text-white rounded-lg font-semibold text-lg hover:bg-gray-700 transition-all shadow-lg hover:shadow-xl"
+              >
+                View Previous Results
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-xl p-6 border border-blue-200">
+            <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+              <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">📋</span>
+              What to Expect:
+            </h3>
+            <ul className="space-y-3 text-blue-700">
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-3 text-lg">•</span>
+                <span>20 questions about your child's behavior</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-3 text-lg">•</span>
+                <span>Takes approximately 10-15 minutes to complete</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-3 text-lg">•</span>
+                <span>Answer based on your child's typical behavior</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-3 text-lg">•</span>
+                <span>You can save your progress and return later</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="bg-gradient-to-r from-amber-50 to-orange-100 rounded-xl p-6 border border-amber-200">
+            <h3 className="text-lg font-semibold text-amber-800 mb-4 flex items-center">
+              <span className="w-6 h-6 bg-amber-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">⚠️</span>
+              Important Note:
+            </h3>
+            <p className="text-amber-700 leading-relaxed">
+              This assessment is a screening tool and should not be used as a diagnostic tool. 
+              If you have concerns about your child's development, please consult with a healthcare professional.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-100 rounded-xl p-6 border border-purple-200">
+          <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center">
+            <span className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">ℹ️</span>
+            About M-CHAT
+          </h3>
+          <p className="text-purple-700 leading-relaxed">
+            The M-CHAT was developed by Dr. Diana Robins, Dr. Deborah Fein, and Dr. Marianne Barton 
+            to help identify children who may need further evaluation for autism spectrum disorder. 
+            It is widely used by healthcare professionals and researchers worldwide.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 

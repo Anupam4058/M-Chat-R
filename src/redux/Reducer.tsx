@@ -4,7 +4,7 @@
  */
 
 import { AnswerState } from "../types";
-import { ActionTypes } from "./Action";
+import { ActionTypes, ChildInfoData } from "./Action";
 
 // Answer entry interface for storing question answers
 interface AnswerEntry {
@@ -12,16 +12,29 @@ interface AnswerEntry {
   answer: AnswerState;
 }
 
+// Individual question result interface
+interface QuestionResult {
+  questionId: number;
+  result: "pass" | "fail";
+  mainAnswer: "yes" | "no";
+  subAnswers: ("yes" | "no" | "zero" | "one")[];
+  completed: boolean;
+}
+
 // State interface for the answers slice
 interface AnswersState {
   answers: AnswerEntry[];
   currentQuestionIndex: number;
+  questionResults: QuestionResult[];
+  childInfo: ChildInfoData | null;
 }
 
 // Initial state
 const initialState: AnswersState = {
   answers: [],
   currentQuestionIndex: 0,
+  questionResults: [],
+  childInfo: null,
 };
 
 /**
@@ -53,6 +66,65 @@ const handleAnswers = (state: AnswersState = initialState, action: ActionTypes):
       return { 
         ...state, 
         currentQuestionIndex: action.payload 
+      };
+      
+    case "SAVE_QUESTION_RESULT":
+      const newQuestionResults = [...state.questionResults];
+      const existingResultIndex = newQuestionResults.findIndex(r => r.questionId === action.payload.questionId);
+      
+      const questionResult: QuestionResult = {
+        questionId: action.payload.questionId,
+        result: action.payload.result,
+        mainAnswer: action.payload.mainAnswer,
+        subAnswers: action.payload.subAnswers,
+        completed: true,
+      };
+      
+      if (existingResultIndex >= 0) {
+        // Update existing result
+        newQuestionResults[existingResultIndex] = questionResult;
+      } else {
+        // Add new result
+        newQuestionResults.push(questionResult);
+      }
+      
+      return {
+        ...state,
+        questionResults: newQuestionResults,
+      };
+      
+    case "CLEAR_QUESTION_RESULT":
+      return {
+        ...state,
+        questionResults: state.questionResults.filter(r => r.questionId !== action.payload.questionId),
+      };
+      
+    case "SET_QUESTION_COMPLETED":
+      const updatedQuestionResults = [...state.questionResults];
+      const resultIndex = updatedQuestionResults.findIndex(r => r.questionId === action.payload.questionId);
+      
+      if (resultIndex >= 0) {
+        updatedQuestionResults[resultIndex] = {
+          ...updatedQuestionResults[resultIndex],
+          completed: action.payload.completed,
+        };
+      }
+      
+      return {
+        ...state,
+        questionResults: updatedQuestionResults,
+      };
+      
+    case "SAVE_CHILD_INFO":
+      return {
+        ...state,
+        childInfo: action.payload,
+      };
+      
+    case "CLEAR_CHILD_INFO":
+      return {
+        ...state,
+        childInfo: null,
       };
       
     default:

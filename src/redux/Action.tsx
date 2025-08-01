@@ -5,6 +5,16 @@
 
 import { questionType, AnswerState } from "../types";
 
+// Child information interface
+export interface ChildInfoData {
+  guardianName: string;
+  guardianPhone: string;
+  childName: string;
+  gender: "male" | "female";
+  dateOfBirth: string;
+  city: string;
+}
+
 // Base state interface extending question type
 interface State extends questionType {
   index: number;
@@ -13,7 +23,12 @@ interface State extends questionType {
 // Action type definitions
 export type ActionTypes = 
   | { type: "update_answer"; payload: { index: number; answer: AnswerState } }
-  | { type: "SET_CURRENT_QUESTION"; payload: number };
+  | { type: "SET_CURRENT_QUESTION"; payload: number }
+  | { type: "SAVE_QUESTION_RESULT"; payload: { questionId: number; result: "pass" | "fail"; mainAnswer: "yes" | "no"; subAnswers: ("yes" | "no" | "zero" | "one")[] } }
+  | { type: "CLEAR_QUESTION_RESULT"; payload: { questionId: number } }
+  | { type: "SET_QUESTION_COMPLETED"; payload: { questionId: number; completed: boolean } }
+  | { type: "SAVE_CHILD_INFO"; payload: ChildInfoData }
+  | { type: "CLEAR_CHILD_INFO"; payload: void };
 
 /**
  * Action creator for updating an answer
@@ -32,4 +47,57 @@ export const updateAnswer = (index: number, answer: AnswerState): ActionTypes =>
 export const setCurrentQuestion = (index: number): ActionTypes => ({
   type: "SET_CURRENT_QUESTION",
   payload: index
+});
+
+/**
+ * Action creator for saving individual question results
+ * @param questionId - Question ID (1-20)
+ * @param result - Pass or fail result
+ * @param mainAnswer - Main yes/no answer
+ * @param subAnswers - Array of sub-question answers
+ */
+export const saveQuestionResult = (
+  questionId: number, 
+  result: "pass" | "fail", 
+  mainAnswer: "yes" | "no", 
+  subAnswers: ("yes" | "no" | "zero" | "one")[]
+): ActionTypes => ({
+  type: "SAVE_QUESTION_RESULT",
+  payload: { questionId, result, mainAnswer, subAnswers }
+});
+
+/**
+ * Action creator for clearing a question result
+ * @param questionId - Question ID to clear
+ */
+export const clearQuestionResult = (questionId: number): ActionTypes => ({
+  type: "CLEAR_QUESTION_RESULT",
+  payload: { questionId }
+});
+
+/**
+ * Action creator for marking a question as completed
+ * @param questionId - Question ID
+ * @param completed - Whether the question is completed
+ */
+export const setQuestionCompleted = (questionId: number, completed: boolean): ActionTypes => ({
+  type: "SET_QUESTION_COMPLETED",
+  payload: { questionId, completed }
+});
+
+/**
+ * Action creator for saving child information
+ * @param childInfo - Child and guardian information
+ */
+export const saveChildInfo = (childInfo: ChildInfoData): ActionTypes => ({
+  type: "SAVE_CHILD_INFO",
+  payload: childInfo
+});
+
+/**
+ * Action creator for clearing child information
+ */
+export const clearChildInfo = (): ActionTypes => ({
+  type: "CLEAR_CHILD_INFO",
+  payload: undefined
 });
