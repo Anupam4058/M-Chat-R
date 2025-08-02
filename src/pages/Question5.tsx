@@ -11,6 +11,18 @@ const Question5: React.FC = () => {
   // Get child info from Redux store
   const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
   const childName = childInfo?.childName || "your child";
+  const childGender = childInfo?.gender || "unknown";
+  
+  // Get gender-specific pronouns
+  const getPronoun = (type: "subject" | "object" | "possessive") => {
+    if (childGender === "male") {
+      return type === "subject" ? "he" : type === "object" ? "him" : "his";
+    } else if (childGender === "female") {
+      return type === "subject" ? "she" : type === "object" ? "her" : "her";
+    } else {
+      return type === "subject" ? "he/she" : type === "object" ? "him/her" : "his/her";
+    }
+  };
 
   // State for main answer and complex sub-questions
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | null>(null);
@@ -36,10 +48,10 @@ const Question5: React.FC = () => {
   ];
 
   const oneQuestions = [
-    "Wiggle his/her fingers near his/her eyes?",
-    "Hold his/her hands up close to his/her eyes?",
-    "Hold his/her hands off to the side of his/her eyes?",
-    "Flap his/her hands near his/her face?"
+    `Wiggle ${getPronoun("possessive")} fingers near ${getPronoun("possessive")} eyes?`,
+    `Hold ${getPronoun("possessive")} hands up close to ${getPronoun("possessive")} eyes?`,
+    `Hold ${getPronoun("possessive")} hands off to the side of ${getPronoun("possessive")} eyes?`,
+    `Flap ${getPronoun("possessive")} hands near ${getPronoun("possessive")} face?`
   ];
 
   // Calculate score based on complex flowchart logic
@@ -262,11 +274,11 @@ const Question5: React.FC = () => {
                 5
               </div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                Does {childName} make unusual finger movements near his or her eyes?
+                Does {childName} make unusual finger movements near {getPronoun("possessive")} eyes?
               </h1>
             </div>
             <p className="text-gray-600 mb-6 italic">
-              (does {childName} wiggle his or her fingers close to his or her eyes?)
+              (does {childName} wiggle {getPronoun("possessive")} fingers close to {getPronoun("possessive")} eyes?)
             </p>
             
             {/* Main Answer Buttons - Vertical Layout */}
@@ -309,7 +321,7 @@ const Question5: React.FC = () => {
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
-                  Does he/she ... (Below are 0 examples)
+                  Does {getPronoun("subject")} ... (Below are 0 examples)
                 </h3>
               </div>
               
@@ -390,7 +402,7 @@ const Question5: React.FC = () => {
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
-                  Does he/she... (Below are 1 examples)
+                  Does {getPronoun("subject")}... (Below are 1 examples)
                 </h3>
               </div>
               

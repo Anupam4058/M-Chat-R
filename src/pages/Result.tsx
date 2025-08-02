@@ -11,6 +11,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/Store";
 import PDFDownload from "../component/PDFDownload";
+import QuestionsData from "../data/questionsData";
 
 interface QuestionResult {
   questionId: number;
@@ -21,19 +22,48 @@ interface QuestionResult {
 }
 
 const Result = () => {
-  // Get results from Redux store
+  // Get results and child info from Redux store
   const questionResults = useSelector((state: RootState) => (state.answers as any).questionResults || []);
+  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  const childName = childInfo?.childName || "your child";
+  const childGender = childInfo?.gender || "unknown";
+  
+  // Get gender-specific pronouns
+  const getPronoun = (type: "subject" | "object" | "possessive") => {
+    if (childGender === "male") {
+      return type === "subject" ? "he" : type === "object" ? "him" : "his";
+    } else if (childGender === "female") {
+      return type === "subject" ? "she" : type === "object" ? "her" : "her";
+    } else {
+      return type === "subject" ? "he/she" : type === "object" ? "him/her" : "his/her";
+    }
+  };
+  
+  // Function to personalize question text
+  const personalizeQuestion = (questionText: string) => {
+    return questionText
+      .replace(/your child/gi, childName)
+      .replace(/his or her/gi, getPronoun("possessive"))
+      .replace(/he or she/gi, getPronoun("subject"))
+      .replace(/him or her/gi, getPronoun("object"))
+      .replace(/his\/her/gi, getPronoun("possessive"))
+      .replace(/he\/she/gi, getPronoun("subject"))
+      .replace(/him\/her/gi, getPronoun("object"));
+  };
 
   // Prepare data for PDF
-  const pdfData = questionResults.map((result: QuestionResult) => ({
-    title: `Question ${result.questionId}`,
-    description: `Main Answer: ${result.mainAnswer}`,
-    answer: result.result,
-    subAnswers: result.subAnswers.map((answer, index) => ({
-      title: `Sub-question ${index + 1}`,
-      answer: answer
-    }))
-  }));
+  const pdfData = questionResults.map((result: QuestionResult) => {
+    const questionData = QuestionsData.find(q => q.id === result.questionId);
+    const questionTitle = questionData ? questionData.title : `Question ${result.questionId}`;
+    const personalizedTitle = personalizeQuestion(questionTitle);
+    
+    return {
+      title: `Question ${result.questionId}`,
+      description: personalizedTitle,
+      answer: result.result,
+      subAnswers: []
+    };
+  });
 
   const totalQuestions = 20;
   const completedQuestions = questionResults.length;
@@ -45,7 +75,7 @@ const Result = () => {
       <div className="w-full max-w-4xl bg-white/80 rounded-2xl shadow-2xl p-6 md:p-10">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-600 bg-clip-text text-transparent">
-            M-CHAT Results
+            M-CHAT Results for {childName}
           </h1>
           <PDFDownload results={pdfData} />
         </div>
@@ -76,46 +106,40 @@ const Result = () => {
               <thead className="text-xs uppercase bg-gradient-to-r from-indigo-100 via-purple-100 to-indigo-200 text-indigo-700">
                 <tr>
                   <th scope="col" className="px-6 py-3 rounded-tl-xl">Q. No.</th>
-                  <th scope="col" className="px-6 py-3">Main Answer</th>
-                  <th scope="col" className="px-6 py-3">Sub-Answers</th>
+                  <th scope="col" className="px-6 py-3">Question</th>
                   <th scope="col" className="px-6 py-3 rounded-tr-xl">Result</th>
                 </tr>
               </thead>
               <tbody>
-                {questionResults.map((result: QuestionResult, idx: number) => (
-                  <tr key={idx} className="bg-white even:bg-indigo-50 border-b border-indigo-100 last:border-0">
-                    <th scope="row" className="px-6 py-4 font-bold text-indigo-700 whitespace-nowrap">
-                      {result.questionId}
-                    </th>
-                    <td className="px-6 py-4 font-medium text-gray-900 capitalize">
-                      {result.mainAnswer}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {result.subAnswers.length > 0 
-                        ? result.subAnswers.map((answer, index) => (
-                            <span key={index} className={`inline-block px-2 py-1 rounded mr-1 text-xs ${
-                              answer === "yes" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                            }`}>
-                              {answer}
-                            </span>
-                          ))
-                        : "None"
-                      }
-                    </td>
-                    <td className="px-6 py-4 font-bold text-center">
-                      <span className={result.result === "pass" ? "text-green-600" : "text-red-500"}>
-                        {result.result === "pass" ? "Pass" : "Fail"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {questionResults.map((result: QuestionResult, idx: number) => {
+                  // Find the question data for this result
+                  const questionData = QuestionsData.find(q => q.id === result.questionId);
+                  const questionTitle = questionData ? questionData.title : `Question ${result.questionId}`;
+                  const personalizedTitle = personalizeQuestion(questionTitle);
+                  
+                  return (
+                    <tr key={idx} className="bg-white even:bg-indigo-50 border-b border-indigo-100 last:border-0">
+                      <th scope="row" className="px-6 py-4 font-bold text-indigo-700 whitespace-nowrap">
+                        {result.questionId}
+                      </th>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {personalizedTitle}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-center">
+                        <span className={result.result === "pass" ? "text-green-600" : "text-red-500"}>
+                          {result.result === "pass" ? "Pass" : "Fail"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         ) : (
           <div className="text-center py-8">
             <h3 className="text-xl font-semibold text-gray-700 mb-2">No Results Available</h3>
-            <p className="text-gray-500">Complete the questionnaire to see results here.</p>
+            <p className="text-gray-500">Complete the questionnaire for {childName} to see results here.</p>
           </div>
         )}
 

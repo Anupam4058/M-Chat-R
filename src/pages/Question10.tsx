@@ -11,6 +11,18 @@ const Question10: React.FC = () => {
   // Get child info from Redux store
   const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
   const childName = childInfo?.childName || "your child";
+  const childGender = childInfo?.gender || "unknown";
+  
+  // Get gender-specific pronouns
+  const getPronoun = (type: "subject" | "object" | "possessive") => {
+    if (childGender === "male") {
+      return type === "subject" ? "he" : type === "object" ? "him" : "his";
+    } else if (childGender === "female") {
+      return type === "subject" ? "she" : type === "object" ? "her" : "her";
+    } else {
+      return type === "subject" ? "he/she" : type === "object" ? "him/her" : "his/her";
+    }
+  };
 
   // State for main answer and sub-questions
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | null>(null);
@@ -31,13 +43,13 @@ const Question10: React.FC = () => {
   const zeroQuestions = [
     "Look up?",
     "Talk or babble?",
-    "Stop what he/she is doing?"
+    `Stop what ${getPronoun("subject")} is doing?`
   ];
 
   const oneQuestions = [
     "Make no response?",
     "Seem to hear but ignores parent?",
-    "Respond only if parent is right in front of the child's face?",
+    `Respond only if parent is right in front of ${getPronoun("possessive")} face?`,
     "Respond only if touched?"
   ];
 
@@ -253,7 +265,7 @@ const Question10: React.FC = () => {
                 10
               </div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                Does {childName} respond when you call his/her name?
+                Does {childName} respond when you call {getPronoun("possessive")} name?
               </h1>
             </div>
             
@@ -287,7 +299,7 @@ const Question10: React.FC = () => {
            {mainAnswer === "yes" && currentSection !== "main" && (
              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                <p className="text-blue-800">
-                 Please give me an example of how he/she responds when you call his/her name. (If parent does not give a 0 example below, ask each individually.)
+                 Please give me an example of how {getPronoun("subject")} responds when you call {getPronoun("possessive")} name. (If parent does not give a 0 example below, ask each individually.)
                </p>
              </div>
            )}
@@ -296,7 +308,7 @@ const Question10: React.FC = () => {
            {mainAnswer === "no" && currentSection !== "main" && (
              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                <p className="text-blue-800">
-                 If he/she is not involved in something fun or interesting, what does he/she do when you call his/her name? (If parent does not give a 0 example below, ask each individually.)
+                 If {getPronoun("subject")} is not involved in something fun or interesting, what does {getPronoun("subject")} do when you call {getPronoun("possessive")} name? (If parent does not give a 0 example below, ask each individually.)
                </p>
              </div>
            )}
@@ -306,7 +318,7 @@ const Question10: React.FC = () => {
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
-                  Does he/she... (below are 0 responses)
+                  Does {getPronoun("subject")}... (below are 0 responses)
                 </h3>
               </div>
               
@@ -387,7 +399,7 @@ const Question10: React.FC = () => {
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
-                  Does he/she... (below are 1 responses)
+                  Does {getPronoun("subject")}... (below are 1 responses)
                 </h3>
               </div>
               
@@ -468,7 +480,7 @@ const Question10: React.FC = () => {
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
-                  Which one does he/she do most often?
+                  Which one does {getPronoun("subject")} do most often?
                 </h3>
               </div>
               

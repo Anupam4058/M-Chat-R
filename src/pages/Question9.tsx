@@ -11,6 +11,18 @@ const Question9: React.FC = () => {
   // Get child info from Redux store
   const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
   const childName = childInfo?.childName || "your child";
+  const childGender = childInfo?.gender || "unknown";
+  
+  // Get gender-specific pronouns
+  const getPronoun = (type: "subject" | "object" | "possessive") => {
+    if (childGender === "male") {
+      return type === "subject" ? "he" : type === "object" ? "him" : "his";
+    } else if (childGender === "female") {
+      return type === "subject" ? "she" : type === "object" ? "her" : "her";
+    } else {
+      return type === "subject" ? "he/she" : type === "object" ? "him/her" : "his/her";
+    }
+  };
 
   // State for main answer and sub-questions
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | null>(null);
@@ -28,10 +40,10 @@ const Question9: React.FC = () => {
 
   const subQuestions = [
     "A picture or toy just to show you?",
-    "A drawing he/she has done?",
-    "A flower he/she has picked?",
-    "A bug he/she has found in the grass?",
-    "A few blocks he/she has put together?"
+    `A drawing ${getPronoun("subject")} has done?`,
+    `A flower ${getPronoun("subject")} has picked?`,
+    `A bug ${getPronoun("subject")} has found in the grass?`,
+    `A few blocks ${getPronoun("subject")} has put together?`
   ];
 
   // Calculate score based on flowchart logic
@@ -228,7 +240,7 @@ const Question9: React.FC = () => {
           {mainAnswer === "yes" && currentSection !== "main" && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-800">
-                Please give me an example of something he/she might bring to show you or hold up for you to see. (If parent does not give one of the following 0 examples, ask each individually.)
+                Please give me an example of something {getPronoun("subject")} might bring to show you or hold up for you to see. (If parent does not give one of the following 0 examples, ask each individually.)
               </p>
             </div>
           )}
@@ -365,8 +377,8 @@ const Question9: React.FC = () => {
                   : "text-red-700"
               }`}>
                 {score === 0 
-                  ? "Your child shows appropriate sharing behaviors." 
-                  : "Your child may need further evaluation for sharing behaviors."
+                  ? `${childName} shows appropriate sharing behaviors.` 
+                  : `${childName} may need further evaluation for sharing behaviors.`
                 }
               </p>
             </div>

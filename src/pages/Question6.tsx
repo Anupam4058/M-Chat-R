@@ -11,6 +11,18 @@ const Question6: React.FC = () => {
   // Get child info from Redux store
   const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
   const childName = childInfo?.childName || "your child";
+  const childGender = childInfo?.gender || "unknown";
+  
+  // Get gender-specific pronouns
+  const getPronoun = (type: "subject" | "object" | "possessive") => {
+    if (childGender === "male") {
+      return type === "subject" ? "he" : type === "object" ? "him" : "his";
+    } else if (childGender === "female") {
+      return type === "subject" ? "she" : type === "object" ? "her" : "her";
+    } else {
+      return type === "subject" ? "he/she" : type === "object" ? "him/her" : "his/her";
+    }
+  };
 
   // State for main answer and sub-questions
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | null>(null);
@@ -27,9 +39,9 @@ const Question6: React.FC = () => {
   const [currentSection, setCurrentSection] = useState<"main" | "sub" | "followup">("main");
 
   const subQuestions = [
-    "Reach for the object with his/her whole hand?",
+    `Reach for the object with ${getPronoun("possessive")} whole hand?`,
     "Lead you to the object?",
-    "Try to get the object for him/herself?",
+    `Try to get the object for ${getPronoun("object")}self?`,
     "Ask for it using words or sounds?"
   ];
 
@@ -107,16 +119,19 @@ const Question6: React.FC = () => {
     if (currentQuestionIndex < subQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Check if any sub-questions were answered "Yes"
-      const updatedSubAnswers = [...newSubAnswers];
-      const yesCount = updatedSubAnswers.filter(answer => answer === "yes").length;
-      
-      if (yesCount > 0) {
-        // If any sub-question is "Yes", proceed to follow-up question
-        setCurrentSection("followup");
-      } else {
-        // If all sub-questions are "No", we can calculate score immediately
-        // The useEffect will handle the scoring
+      // Only proceed if all questions are answered
+      const allAnswered = newSubAnswers.every(answer => answer !== undefined && answer !== null);
+      if (allAnswered) {
+        // Check if any sub-questions were answered "Yes"
+        const yesCount = newSubAnswers.filter(answer => answer === "yes").length;
+        
+        if (yesCount > 0) {
+          // If any sub-question is "Yes", proceed to follow-up question
+          setCurrentSection("followup");
+        } else {
+          // If all sub-questions are "No", we can calculate score immediately
+          // The useEffect will handle the scoring
+        }
       }
     }
   };
@@ -173,7 +188,8 @@ const Question6: React.FC = () => {
 
   const canGoNext = () => {
     if (currentSection === "sub") {
-      return currentQuestionIndex < subQuestions.length - 1;
+      // Only allow next if current question is answered and there are more questions
+      return getCurrentAnswer() !== undefined && getCurrentAnswer() !== null && currentQuestionIndex < subQuestions.length - 1;
     }
     return false;
   };
@@ -235,7 +251,7 @@ const Question6: React.FC = () => {
           {mainAnswer === "no" && currentSection !== "main" && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-800">
-                If there is something {childName} wants that is out of reach, such as a snack or toy that is out of reach, how does he/she get it? (If parent does not give a 0 example below, ask each individually.)
+                If there is something {childName} wants that is out of reach, such as a snack or toy that is out of reach, how does {getPronoun("subject")} get it? (If parent does not give a 0 example below, ask each individually.)
               </p>
             </div>
           )}
@@ -245,7 +261,7 @@ const Question6: React.FC = () => {
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
-                  Does he/she...
+                  Does {getPronoun("subject")}...
                 </h3>
               </div>
               
@@ -326,7 +342,7 @@ const Question6: React.FC = () => {
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
-                  If you said "Show me," would he/she point at it?
+                  If you said "Show me," would {getPronoun("subject")} point at it?
                 </h3>
               </div>
               

@@ -11,6 +11,18 @@ const Question8: React.FC = () => {
   // Get child info from Redux store
   const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
   const childName = childInfo?.childName || "your child";
+  const childGender = childInfo?.gender || "unknown";
+  
+  // Get gender-specific pronouns
+  const getPronoun = (type: "subject" | "object" | "possessive") => {
+    if (childGender === "male") {
+      return type === "subject" ? "he" : type === "object" ? "him" : "his";
+    } else if (childGender === "female") {
+      return type === "subject" ? "she" : type === "object" ? "her" : "her";
+    } else {
+      return type === "subject" ? "he/she" : type === "object" ? "him/her" : "his/her";
+    }
+  };
 
   // State for main answer and sub-questions
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | null>(null);
@@ -233,7 +245,7 @@ const Question8: React.FC = () => {
                 8
               </div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                Is {childName} interested in children who are not his/her brother or sister?
+                Is {childName} interested in children who are not {getPronoun("possessive")} brother or sister?
               </h1>
             </div>
             
