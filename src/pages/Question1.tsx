@@ -21,10 +21,11 @@ const Question1: React.FC = () => {
   const [zeroExamples, setZeroExamples] = useState<("yes" | "no")[]>([]);
   const [oneExamples, setOneExamples] = useState<("yes" | "no")[]>([]);
   const [score, setScore] = useState<0 | 1 | null>(null);
-  const [showMostOften, setShowMostOften] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [mostOften, setMostOften] = useState<"zero" | "one" | null>(null);
+  const [userExample, setUserExample] = useState<string>("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [currentSet, setCurrentSet] = useState<"zero" | "one">("zero");
+  const [currentQuestionType, setCurrentQuestionType] = useState<"zero" | "one" | null>(null);
 
   const zeroExampleQuestions = [
     "Look at object?",
@@ -73,22 +74,32 @@ const Question1: React.FC = () => {
       const zeroYesCount = zeroExamples.filter(ans => ans === "yes").length;
       const oneYesCount = oneExamples.filter(ans => ans === "yes").length;
       
+      // Flowchart logic:
+      // If YES only to 0 examples → PASS (0)
+      // If YES only to 1 examples → FAIL (1)
+      // If YES to both 0 and 1 examples → Show modal to ask which is most often
+      // If NO to both → FAIL (1)
+      
       if (zeroYesCount > 0 && oneYesCount === 0) {
-        setScore(0);
+        setScore(0); // PASS
       } else if (zeroYesCount === 0 && oneYesCount > 0) {
-        setScore(1);
+        setScore(1); // FAIL
       } else if (zeroYesCount > 0 && oneYesCount > 0) {
-        setShowMostOften(true);
+        setShowModal(true);
       } else if (zeroYesCount === 0 && oneYesCount === 0) {
-        setScore(1);
+        setScore(1); // FAIL
       }
     }
   }, [zeroExamples, oneExamples, mainAnswer, zeroExampleQuestions.length, oneExampleQuestions.length]);
 
   // Handle most often selection
   useEffect(() => {
+    console.log("mostOften changed:", mostOften);
     if (mostOften !== null) {
+      console.log("Setting score and closing modal");
+      // Immediately set the score and close modal
       setScore(mostOften === "zero" ? 0 : 1);
+      setShowModal(false);
     }
   }, [mostOften]);
 
@@ -112,25 +123,51 @@ const Question1: React.FC = () => {
     setZeroExamples([]);
     setOneExamples([]);
     setScore(null);
-    setShowMostOften(false);
+    setShowModal(false);
     setMostOften(null);
+    setUserExample("");
     setCurrentQuestionIndex(0);
-    setCurrentSet("zero");
+    setCurrentQuestionType(answer === "yes" ? "zero" : "one");
   };
 
   const handleZeroExample = (index: number, answer: "yes" | "no") => {
     const newAnswers = [...zeroExamples];
     newAnswers[index] = answer;
     setZeroExamples(newAnswers);
+    
+    // Move to next question
+    if (index < zeroExampleQuestions.length - 1) {
+      setCurrentQuestionIndex(index + 1);
+    } else {
+      // All zero questions answered, move to one questions if user selected "Yes" initially
+      if (mainAnswer === "yes") {
+        setCurrentQuestionType("one");
+        setCurrentQuestionIndex(0);
+      }
+      // If this is the last question and user selected "No" initially, the score will be calculated automatically
+    }
   };
 
   const handleOneExample = (index: number, answer: "yes" | "no") => {
     const newAnswers = [...oneExamples];
     newAnswers[index] = answer;
     setOneExamples(newAnswers);
+    
+    // Move to next question
+    if (index < oneExampleQuestions.length - 1) {
+      setCurrentQuestionIndex(index + 1);
+    } else {
+      // All one questions answered, move to zero questions if user selected "No" initially
+      if (mainAnswer === "no") {
+        setCurrentQuestionType("zero");
+        setCurrentQuestionIndex(0);
+      }
+      // If this is the last question and user selected "Yes" initially, the score will be calculated automatically
+    }
   };
 
   const handleMostOften = (choice: "zero" | "one") => {
+    console.log("Modal selection:", choice);
     setMostOften(choice);
   };
 
@@ -140,77 +177,6 @@ const Question1: React.FC = () => {
 
   const handlePrev = () => {
     navigate("/child-info");
-  };
-
-  const handleNextQuestion = () => {
-    if (currentSet === "zero") {
-      if (currentQuestionIndex < zeroExampleQuestions.length - 1) {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-      } else {
-        // Move to second set
-        setCurrentSet("one");
-        setCurrentQuestionIndex(0);
-      }
-    } else if (currentSet === "one") {
-      if (currentQuestionIndex < oneExampleQuestions.length - 1) {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-      }
-    }
-  };
-
-  const handlePrevQuestion = () => {
-    if (currentSet === "zero") {
-      if (currentQuestionIndex > 0) {
-        setCurrentQuestionIndex(currentQuestionIndex - 1);
-      }
-    } else if (currentSet === "one") {
-      if (currentQuestionIndex > 0) {
-        setCurrentQuestionIndex(currentQuestionIndex - 1);
-      } else {
-        // Move back to first set
-        setCurrentSet("zero");
-        setCurrentQuestionIndex(zeroExampleQuestions.length - 1);
-      }
-    }
-  };
-
-  const getCurrentQuestion = () => {
-    if (mainAnswer === null) return null;
-    
-    if (currentSet === "zero") {
-      return zeroExampleQuestions[currentQuestionIndex];
-    } else {
-      return oneExampleQuestions[currentQuestionIndex];
-    }
-  };
-
-  const getCurrentAnswer = () => {
-    if (currentSet === "zero") {
-      return zeroExamples[currentQuestionIndex];
-    } else {
-      return oneExamples[currentQuestionIndex];
-    }
-  };
-
-  const handleCurrentAnswer = (answer: "yes" | "no") => {
-    if (currentSet === "zero") {
-      handleZeroExample(currentQuestionIndex, answer);
-      // Auto-advance to next question
-      if (currentQuestionIndex < zeroExampleQuestions.length - 1) {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-      } else {
-        // Move to second set
-        setCurrentSet("one");
-        setCurrentQuestionIndex(0);
-      }
-    } else {
-      handleOneExample(currentQuestionIndex, answer);
-      // Auto-advance to next question
-      if (currentQuestionIndex < oneExampleQuestions.length - 1) {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-      }
-      // If this is the last question, the score will be calculated automatically
-    }
   };
 
   const getAnsweredCount = () => {
@@ -223,18 +189,10 @@ const Question1: React.FC = () => {
     return zeroExampleQuestions.length + oneExampleQuestions.length;
   };
 
-  const getCurrentSetTitle = () => {
-    if (currentSet === "zero") {
-      return "First Set of Questions";
-    } else {
-      return "Second Set of Questions";
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
+        <div className="max-w-6xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
           
           {/* Progress Bar */}
           <div className="mb-8">
@@ -247,7 +205,7 @@ const Question1: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Question - Simple Layout */}
+          {/* Main Question */}
           <div className="mb-8">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
@@ -261,11 +219,11 @@ const Question1: React.FC = () => {
               (For example: if you point at a toy or an animal, does {childName} look at the toy or animal?)
             </p>
             
-            {/* Main Answer Buttons - Vertical Layout */}
-            <div className="flex flex-col gap-4 mb-6">
+            {/* Main Answer Buttons */}
+            <div className="flex gap-4 mb-6 justify-center">
               <button
                 onClick={() => handleMainAnswer("yes")}
-                className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
+                className={`px-6 py-3 rounded-full font-semibold transition-all border-2 flex items-center justify-center min-w-[120px] ${
                   mainAnswer === "yes"
                     ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
                     : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
@@ -276,12 +234,13 @@ const Question1: React.FC = () => {
               </button>
               <button
                 onClick={() => handleMainAnswer("no")}
-                className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
+                className={`px-6 py-3 rounded-full font-semibold transition-all border-2 flex items-center justify-center min-w-[120px] ${
                   mainAnswer === "no"
                     ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
                     : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                 }`}
               >
+                {mainAnswer === "no" && <span className="mr-2">✓</span>}
                 No
               </button>
             </div>
@@ -290,9 +249,25 @@ const Question1: React.FC = () => {
           {/* Instructions based on main answer */}
           {mainAnswer === "yes" && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800">
-                "If yes then..." Please give me an example of how {childName} will respond if you point at something If parent does not give a PASS example below, ask each individually.
+              <p className="text-blue-800 mb-4">
+                Please give me an example of how {childName} will respond if you point at something?
               </p>
+              <div className="space-y-3">
+                <label htmlFor="userExample" className="block text-sm font-medium text-blue-800">
+                  Describe {childName}'s behavior when you point at something:
+                </label>
+                <textarea
+                  id="userExample"
+                  value={userExample}
+                  onChange={(e) => setUserExample(e.target.value)}
+                  placeholder="For example: 'When I point at a toy, he looks at the toy and sometimes reaches for it'"
+                  className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={3}
+                />
+                <p className="text-xs text-blue-600">
+                  This helps us understand {childName}'s specific responses to pointing gestures.
+                </p>
+              </div>
             </div>
           )}
 
@@ -305,7 +280,7 @@ const Question1: React.FC = () => {
           )}
 
           {/* Sub-Questions Progress Bar */}
-          {mainAnswer !== null && !showMostOften && score === null && (
+          {mainAnswer !== null && !showModal && score === null && (
             <div className="mb-4">
               <div className="w-full bg-gray-200 rounded-full h-1 mb-2">
                 <div 
@@ -319,101 +294,205 @@ const Question1: React.FC = () => {
             </div>
           )}
 
-          {/* Sub-Questions */}
-          {mainAnswer !== null && !showMostOften && score === null && (
-            <div className="mb-6">
-              <div className="text-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-700">
-                  {getCurrentSetTitle()}
-                </h3>
-              </div>
+          {/* Two Boxes Layout for Sub-Questions */}
+          {mainAnswer !== null && !showModal && score === null && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={handlePrevQuestion}
-                  disabled={currentSet === "zero" && currentQuestionIndex === 0}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    currentSet === "zero" && currentQuestionIndex === 0
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  ‹
-                </button>
-                
-                <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 flex-1 mx-4">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                    {currentSet === "zero" ? currentQuestionIndex + 1 : zeroExampleQuestions.length + currentQuestionIndex + 1}. {getCurrentQuestion()}
-                  </h3>
+              {/* Left Box - 0 Examples (Pass Behaviors) */}
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
+                  <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
+                  Does he/she...
+                </h3>
+                <div className="space-y-4">
+                  {/* Show answered questions in their own divs */}
+                  {zeroExampleQuestions.map((question, index) => (
+                    zeroExamples[index] !== undefined && (
+                      <div key={index} className="bg-white rounded-lg p-4 border border-green-200">
+                        <div className="flex items-center justify-between">
+                          <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
+                          <div className={`px-4 py-2 rounded-lg font-medium ${
+                            zeroExamples[index] === "yes"
+                              ? "bg-green-500 text-white"
+                              : "bg-red-500 text-white"
+                          }`}>
+                            {zeroExamples[index] === "yes" ? "Yes" : "No"}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  ))}
                   
-                  {/* Sub-Question Answer Buttons - Vertical Layout */}
-                  <div className="flex flex-col gap-4">
-                    <button
-                      onClick={() => handleCurrentAnswer("yes")}
-                      className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                        getCurrentAnswer() === "yes"
-                          ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                          : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                      }`}
-                    >
-                      {getCurrentAnswer() === "yes" && <span className="mr-2">✓</span>}
-                      Yes
-                    </button>
-                    <button
-                      onClick={() => handleCurrentAnswer("no")}
-                      className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                        getCurrentAnswer() === "no"
-                          ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                          : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                      }`}
-                    >
-                      No
-                    </button>
-                  </div>
+                  {/* Show current question if it's a zero question */}
+                  {currentQuestionType === "zero" && (
+                    <div className="bg-white rounded-lg p-4 border border-green-200">
+                      <div className="flex items-center justify-between">
+                        <p className="text-gray-700 font-medium flex-1 mr-4">
+                          {zeroExampleQuestions[currentQuestionIndex]}
+                        </p>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => handleZeroExample(currentQuestionIndex, "yes")}
+                            className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => handleZeroExample(currentQuestionIndex, "no")}
+                            className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          >
+                            No
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                <button
-                  onClick={handleNextQuestion}
-                  disabled={currentSet === "one" && currentQuestionIndex === oneExampleQuestions.length - 1}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    currentSet === "one" && currentQuestionIndex === oneExampleQuestions.length - 1
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  ›
-                </button>
+              {/* Right Box - 1 Examples (Fail Behaviors) */}
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
+                  <span className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
+                  Does he/she... 
+                </h3>
+                <div className="space-y-4">
+                  {/* Show answered questions in their own divs */}
+                  {oneExampleQuestions.map((question, index) => (
+                    oneExamples[index] !== undefined && (
+                      <div key={index} className="bg-white rounded-lg p-4 border border-red-200">
+                        <div className="flex items-center justify-between">
+                          <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
+                          <div className={`px-4 py-2 rounded-lg font-medium ${
+                            oneExamples[index] === "yes"
+                              ? "bg-red-500 text-white"
+                              : "bg-green-500 text-white"
+                          }`}>
+                            {oneExamples[index] === "yes" ? "Yes" : "No"}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  ))}
+                  
+                  {/* Show current question if it's a one question */}
+                  {currentQuestionType === "one" && (
+                    <div className="bg-white rounded-lg p-4 border border-red-200">
+                      <div className="flex items-center justify-between">
+                        <p className="text-gray-700 font-medium flex-1 mr-4">
+                          {oneExampleQuestions[currentQuestionIndex]}
+                        </p>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => handleOneExample(currentQuestionIndex, "yes")}
+                            className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => handleOneExample(currentQuestionIndex, "no")}
+                            className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          >
+                            No
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Most Often Decision */}
-          {showMostOften && (
-            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <h3 className="text-lg font-semibold text-orange-800 mb-4">
-                Which type of behavior does {childName} show most often?
+          {/* Most Often Decision - Both Boxes Selectable */}
+          {showModal && score === null && (
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
+                Tell me which type of behaviours does {childName} show most often?
               </h3>
-              <div className="flex gap-4">
-                <button
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 0 Examples Box - Selectable */}
+                <div 
                   onClick={() => handleMostOften("zero")}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
                     mostOften === "zero"
-                      ? "bg-green-500 text-white shadow-lg"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      ? "border-green-500 bg-green-50 shadow-lg"
+                      : "border-green-200 bg-white hover:border-green-300 hover:bg-green-50"
                   }`}
                 >
-                  First set of behaviors
-                </button>
-                <button
+                  <h4 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
+                    <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
+                    Does he/she... 
+                  </h4>
+                  
+                  {/* Show all answered 0 example questions */}
+                  <div className="space-y-3">
+                    {zeroExampleQuestions.map((question, index) => (
+                      zeroExamples[index] !== undefined && (
+                        <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
+                          <div className="flex items-center justify-between">
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-sm">{question}</p>
+                            <div className={`px-3 py-1 rounded-lg text-xs font-medium ${
+                              zeroExamples[index] === "yes"
+                                ? "bg-green-500 text-white"
+                                : "bg-red-500 text-white"
+                            }`}>
+                              {zeroExamples[index] === "yes" ? "Yes" : "No"}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </div>
+
+                {/* 1 Examples Box - Selectable */}
+                <div 
                   onClick={() => handleMostOften("one")}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
                     mostOften === "one"
-                      ? "bg-red-500 text-white shadow-lg"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      ? "border-red-500 bg-red-50 shadow-lg"
+                      : "border-red-200 bg-white hover:border-red-300 hover:bg-red-50"
                   }`}
                 >
-                  Second set of behaviors
-                </button>
+                  <h4 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
+                    <span className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
+                    Does he/she... 
+                  </h4>
+                  
+                  {/* Show all answered 1 example questions */}
+                  <div className="space-y-3">
+                    {oneExampleQuestions.map((question, index) => (
+                      oneExamples[index] !== undefined && (
+                        <div key={index} className="bg-white rounded-lg p-3 border border-red-200">
+                          <div className="flex items-center justify-between">
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-sm">{question}</p>
+                            <div className={`px-3 py-1 rounded-lg text-xs font-medium ${
+                              oneExamples[index] === "yes"
+                                ? "bg-red-500 text-white"
+                                : "bg-green-500 text-white"
+                            }`}>
+                              {oneExamples[index] === "yes" ? "Yes" : "No"}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 text-center">
+                {mostOften === null ? (
+                  <p className="text-sm text-gray-600">
+                    Click on the box that represents the behavior type {childName} shows most often
+                  </p>
+                ) : (
+                  <p className="text-sm text-green-600 font-medium">
+                    ✓ Selection registered! Calculating result...
+                  </p>
+                )}
               </div>
             </div>
           )}
