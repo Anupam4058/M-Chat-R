@@ -8,9 +8,13 @@ const Question11: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 11);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -51,6 +55,32 @@ const Question11: React.FC = () => {
     "Smile at a favorite toy or activity?",
     "Smile randomly or at nothing in particular?"
   ];
+
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore sub-answers
+      const subAnswers = existingResult.subAnswers || [];
+      const zeroAnswersCount = zeroQuestions.length;
+      
+      const zeroAnswers = subAnswers.slice(0, zeroAnswersCount) as ("yes" | "no")[];
+      const oneAnswers = subAnswers.slice(zeroAnswersCount, zeroAnswersCount + oneQuestions.length) as ("yes" | "no")[];
+      
+      setZeroExamples(zeroAnswers);
+      setOneExamples(oneAnswers);
+      
+      // Restore mostOften if it exists
+      const mostOftenValue = subAnswers[zeroAnswersCount + oneQuestions.length] as "zero" | "one" | null;
+      if (mostOftenValue) setMostOften(mostOftenValue);
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult, zeroQuestions.length, oneQuestions.length]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
@@ -93,7 +123,7 @@ const Question11: React.FC = () => {
         setScore(null);
       }
     }
-  }, [mainAnswer, zeroExamples, oneExamples, mostOften]);
+  }, [mainAnswer, zeroExamples, oneExamples, mostOften, oneQuestions.length, zeroQuestions.length]);
 
   // Save result when score is calculated
   useEffect(() => {

@@ -8,9 +8,13 @@ const Question1: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 1);
 
   // State for the flowchart logic
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | null>(null);
@@ -35,6 +39,29 @@ const Question1: React.FC = () => {
     "Look at your finger?"
   ];
 
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore sub-answers
+      const subAnswers = existingResult.subAnswers || [];
+      const zeroAnswersCount = zeroExampleQuestions.length;
+      
+      // Split sub-answers into zero and one examples
+      const zeroAnswers = subAnswers.slice(0, zeroAnswersCount) as ("yes" | "no")[];
+      const oneAnswers = subAnswers.slice(zeroAnswersCount) as ("yes" | "no")[];
+      
+      setZeroExamples(zeroAnswers);
+      setOneExamples(oneAnswers);
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult, zeroExampleQuestions.length]);
+
   // Calculate score based on flowchart logic
   useEffect(() => {
     // Only calculate score when ALL questions are answered
@@ -56,7 +83,7 @@ const Question1: React.FC = () => {
         setScore(1);
       }
     }
-  }, [zeroExamples, oneExamples, mainAnswer]);
+  }, [zeroExamples, oneExamples, mainAnswer, zeroExampleQuestions.length, oneExampleQuestions.length]);
 
   // Handle most often selection
   useEffect(() => {
@@ -112,7 +139,7 @@ const Question1: React.FC = () => {
   };
 
   const handlePrev = () => {
-    navigate("/home");
+    navigate("/child-info");
   };
 
   const handleNextQuestion = () => {
@@ -202,12 +229,6 @@ const Question1: React.FC = () => {
     } else {
       return "Second Set of Questions";
     }
-  };
-
-  const isAllQuestionsAnswered = () => {
-    const zeroAnswered = zeroExamples.filter(ans => ans !== undefined).length;
-    const oneAnswered = oneExamples.filter(ans => ans !== undefined).length;
-    return zeroAnswered === zeroExampleQuestions.length && oneAnswered === oneExampleQuestions.length;
   };
 
   return (

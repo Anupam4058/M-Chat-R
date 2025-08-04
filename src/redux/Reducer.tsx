@@ -93,6 +93,31 @@ const handleAnswers = (state: AnswersState = initialState, action: ActionTypes):
         questionResults: newQuestionResults,
       };
       
+    case "SAVE_COMPLEX_QUESTION_RESULT":
+      const newComplexResults = [...state.questionResults];
+      const existingComplexIndex = newComplexResults.findIndex(r => r.questionId === action.payload.questionId);
+      
+      const complexQuestionResult: any = {
+        questionId: action.payload.questionId,
+        result: action.payload.result,
+        mainAnswer: action.payload.mainAnswer,
+        completed: true,
+        ...action.payload.complexData, // Spread the complex data
+      };
+      
+      if (existingComplexIndex >= 0) {
+        // Update existing result
+        newComplexResults[existingComplexIndex] = complexQuestionResult;
+      } else {
+        // Add new result
+        newComplexResults.push(complexQuestionResult);
+      }
+      
+      return {
+        ...state,
+        questionResults: newComplexResults,
+      };
+      
     case "CLEAR_QUESTION_RESULT":
       return {
         ...state,
@@ -125,6 +150,17 @@ const handleAnswers = (state: AnswersState = initialState, action: ActionTypes):
       return {
         ...state,
         childInfo: null,
+      };
+      
+    case "CLEAR_ALL_DATA":
+      // Clear localStorage when clearing all data
+      try {
+        localStorage.removeItem('mchat-assessment-state');
+      } catch (err) {
+        // Ignore errors
+      }
+      return {
+        ...initialState,
       };
       
     default:

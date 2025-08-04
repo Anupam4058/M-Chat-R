@@ -8,9 +8,13 @@ const Question16: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 16);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -45,6 +49,33 @@ const Question16: React.FC = () => {
     "Ignore you?",
     "Look at your face?"
   ];
+
+  // Restore any existing answer from Redux store
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore zero answers
+      if (existingResult.zeroAnswers && Array.isArray(existingResult.zeroAnswers)) {
+        setZeroAnswers(existingResult.zeroAnswers);
+      }
+      
+      // Restore one answers
+      if (existingResult.oneAnswers && Array.isArray(existingResult.oneAnswers)) {
+        setOneAnswers(existingResult.oneAnswers);
+      }
+      
+      // Restore most often answer
+      if (existingResult.mostOftenAnswer !== undefined) {
+        setMostOftenAnswer(existingResult.mostOftenAnswer);
+      }
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
@@ -85,7 +116,7 @@ const Question16: React.FC = () => {
         setScore(null);
       }
     }
-  }, [mainAnswer, zeroAnswers, oneAnswers, mostOftenAnswer]);
+  }, [mainAnswer, zeroAnswers, oneAnswers, mostOftenAnswer, zeroQuestions.length, oneQuestions.length]);
 
   // Save result when score is calculated
   useEffect(() => {

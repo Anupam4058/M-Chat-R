@@ -8,9 +8,13 @@ const Question19: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 19);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -37,6 +41,23 @@ const Question19: React.FC = () => {
     `Does ${childName} look at you when someone new approaches?`,
     `Does ${childName} look at you when ${getPronoun("subject")} is faced with something unfamiliar or a little scary?`
   ];
+
+  // Restore any existing answer from Redux store
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore sub-answers
+      if (existingResult.subAnswers && Array.isArray(existingResult.subAnswers)) {
+        setSubAnswers(existingResult.subAnswers);
+      }
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
@@ -212,7 +233,7 @@ const Question19: React.FC = () => {
           </div>
 
           {/* Sub-Questions Section */}
-          {mainAnswer === "no" && (
+          {mainAnswer === "no" && score === null && (
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">

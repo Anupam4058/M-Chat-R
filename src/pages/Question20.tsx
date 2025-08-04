@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { saveQuestionResult } from "../redux/Action";
+import { saveComplexQuestionResult } from "../redux/Action";
 import { RootState } from "../redux/Store";
 
 const Question20: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 20);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -38,6 +42,28 @@ const Question20: React.FC = () => {
     "Talk or babble?",
     "Request more by holding out his/her arms?"
   ];
+
+  // Restore any existing answer from Redux store
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore enjoy bounced/swung answer
+      if (existingResult.enjoyBouncedSwung !== undefined) {
+        setEnjoyBouncedSwung(existingResult.enjoyBouncedSwung);
+      }
+      
+      // Restore reaction answers
+      if (existingResult.reactionAnswers && Array.isArray(existingResult.reactionAnswers)) {
+        setReactionAnswers(existingResult.reactionAnswers);
+      }
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
@@ -81,16 +107,21 @@ const Question20: React.FC = () => {
   useEffect(() => {
     if (score !== null) {
       const result = score === 0 ? "pass" : "fail";
+      const complexData = {
+        enjoyBouncedSwung,
+        reactionAnswers,
+      };
+      
       dispatch(
-        saveQuestionResult(
+        saveComplexQuestionResult(
           20,
           result,
           mainAnswer || "no",
-          reactionAnswers
+          complexData
         )
       );
     }
-  }, [score, mainAnswer, reactionAnswers, dispatch]);
+  }, [score, mainAnswer, enjoyBouncedSwung, reactionAnswers, dispatch]);
 
   const handleMainAnswer = (answer: "yes" | "no") => {
     setMainAnswer(answer);
@@ -227,7 +258,8 @@ const Question20: React.FC = () => {
           </div>
 
           {/* Enjoy Being Bounced/Swung Question (for "Yes" path) */}
-          {mainAnswer === "yes" && enjoyBouncedSwung === null && (
+                    {/* Follow-up question for "Yes" main answer */}
+          {mainAnswer === "yes" && enjoyBouncedSwung === null && score === null && (
             <div className="mb-6">
               <div className="bg-purple-100 border border-purple-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-700 mb-4">
@@ -254,7 +286,7 @@ const Question20: React.FC = () => {
           )}
 
           {/* Reaction Questions Section */}
-          {((mainAnswer === "yes" && enjoyBouncedSwung === "no") || mainAnswer === "no") && (
+          {((mainAnswer === "yes" && enjoyBouncedSwung === "no") || mainAnswer === "no") && score === null && (
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">

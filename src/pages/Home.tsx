@@ -5,9 +5,18 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { clearAllData } from "../redux/Action";
 
 const Home = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
+  const handleStartNewAssessment = () => {
+    // Clear any existing data before starting new assessment
+    dispatch(clearAllData());
+    navigate("/child-info");
+  };
   
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200 flex flex-col items-center justify-center py-8 px-2">
@@ -33,7 +42,7 @@ const Home = () => {
 
             <div className="mt-8 space-y-4">
               <button
-                onClick={() => navigate("/child-info")}
+                onClick={handleStartNewAssessment}
                 className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 Start New Assessment

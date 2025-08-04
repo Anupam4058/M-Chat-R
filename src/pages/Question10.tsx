@@ -8,9 +8,13 @@ const Question10: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 10);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -53,6 +57,29 @@ const Question10: React.FC = () => {
     "Respond only if touched?"
   ];
 
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore sub-answers
+      const subAnswers = existingResult.subAnswers || [];
+      const zeroAnswersCount = zeroQuestions.length;
+      
+      // Split sub-answers into zero and one examples
+      const zeroAnswers = subAnswers.slice(0, zeroAnswersCount) as ("yes" | "no")[];
+      const oneAnswers = subAnswers.slice(zeroAnswersCount) as ("yes" | "no")[];
+      
+      setZeroExamples(zeroAnswers);
+      setOneExamples(oneAnswers);
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult, zeroQuestions.length]);
+
   // Calculate score based on flowchart logic
   useEffect(() => {
     // Check if we have all necessary answers for both sets
@@ -85,7 +112,7 @@ const Question10: React.FC = () => {
         setScore(0);
       }
     }
-  }, [zeroExamples, oneExamples, mostOften]);
+  }, [zeroExamples, oneExamples, mostOften, oneQuestions.length, zeroQuestions.length]);
 
   // Save result when score is calculated
   useEffect(() => {

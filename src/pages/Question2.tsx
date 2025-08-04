@@ -8,9 +8,13 @@ const Question2: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 2);
 
   // State for Initial Assessment Section (main questions for pass/fail)
   const [ignoreSounds, setIgnoreSounds] = useState<"yes" | "no" | null>(null);
@@ -34,6 +38,27 @@ const Question2: React.FC = () => {
     "Hearing below normal",
     "Results inconclusive or not definitive"
   ];
+
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore the main answers from subAnswers array
+      const subAnswers = existingResult.subAnswers || [];
+      if (subAnswers[0]) setIgnoreSounds(subAnswers[0] as "yes" | "no");
+      if (subAnswers[1]) setIgnorePeople(subAnswers[1] as "yes" | "no");
+      if (subAnswers[2]) setHearingTested(subAnswers[2] as "yes" | "no");
+      if (subAnswers[3]) {
+        const hearingResult = subAnswers[3] as string;
+        if (hearingResult === "normal") setHearingResults("normal");
+        else if (hearingResult === "below-normal") setHearingResults("below-normal");
+        else if (hearingResult === "inconclusive") setHearingResults("inconclusive");
+      }
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setInitialScore(finalScore);
+    }
+  }, [existingResult]);
 
   // Calculate initial score based on flowchart logic (only main questions)
   useEffect(() => {

@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { saveQuestionResult } from "../redux/Action";
+import { saveComplexQuestionResult } from "../redux/Action";
 import { RootState } from "../redux/Store";
 
 const Question18: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 18);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -41,6 +45,38 @@ const Question18: React.FC = () => {
     `If you say, "Bring me the blanket" or ask for another object without pointing, making gestures, or giving hints, does ${childName} bring it to you?`,
     `If you say, "Put the book on the chair" without pointing, making gestures, or giving any other hints, does ${childName} put the book on the chair?`
   ];
+
+  // Restore any existing answer from Redux store
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore example indicates understanding
+      if (existingResult.exampleIndicatesUnderstanding !== undefined) {
+        setExampleIndicatesUnderstanding(existingResult.exampleIndicatesUnderstanding);
+      }
+      
+      // Restore situational clue answer
+      if (existingResult.situationalClueAnswer !== undefined) {
+        setSituationalClueAnswer(existingResult.situationalClueAnswer);
+      }
+      
+      // Restore dinnertime answer
+      if (existingResult.dinnertimeAnswer !== undefined) {
+        setDinnertimeAnswer(existingResult.dinnertimeAnswer);
+      }
+      
+      // Restore command answers
+      if (existingResult.commandAnswers && Array.isArray(existingResult.commandAnswers)) {
+        setCommandAnswers(existingResult.commandAnswers);
+      }
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
@@ -176,25 +212,25 @@ const Question18: React.FC = () => {
     } else {
       setScore(null);
     }
-  }, [mainAnswer, exampleIndicatesUnderstanding, situationalClueAnswer, dinnertimeAnswer, commandAnswers]);
+  }, [mainAnswer, exampleIndicatesUnderstanding, situationalClueAnswer, dinnertimeAnswer, commandAnswers, commandQuestions.length]);
 
   // Save result when score is calculated
   useEffect(() => {
     if (score !== null) {
       const result = score === 0 ? "pass" : "fail";
-      const allSubAnswers: ("yes" | "no")[] = [
-        ...(exampleIndicatesUnderstanding ? [exampleIndicatesUnderstanding] : []),
-        ...(situationalClueAnswer ? [situationalClueAnswer] : []),
-        ...(dinnertimeAnswer ? [dinnertimeAnswer] : []),
-        ...commandAnswers
-      ];
+      const complexData = {
+        exampleIndicatesUnderstanding,
+        situationalClueAnswer,
+        dinnertimeAnswer,
+        commandAnswers,
+      };
       
       dispatch(
-        saveQuestionResult(
+        saveComplexQuestionResult(
           18,
           result,
           mainAnswer || "no",
-          allSubAnswers
+          complexData
         )
       );
     }

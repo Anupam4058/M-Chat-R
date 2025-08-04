@@ -8,9 +8,13 @@ const Question13: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 13);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -28,6 +32,22 @@ const Question13: React.FC = () => {
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | null>(null);
   const [followUpAnswer, setFollowUpAnswer] = useState<"yes" | "no" | null>(null);
   const [score, setScore] = useState<0 | 1 | null>(null);
+
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore follow-up answer if exists
+      const subAnswers = existingResult.subAnswers || [];
+      if (subAnswers[0]) setFollowUpAnswer(subAnswers[0] as "yes" | "no");
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {

@@ -8,9 +8,13 @@ const Question15: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 15);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -44,6 +48,28 @@ const Question15: React.FC = () => {
     "Other (describe):"
   ];
 
+  // Restore any existing answer from Redux store
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore copying answers
+      if (existingResult.copyingAnswers && Array.isArray(existingResult.copyingAnswers)) {
+        setCopyingAnswers(existingResult.copyingAnswers);
+      }
+      
+      // Restore other description
+      if (existingResult.otherDescription !== undefined) {
+        setOtherDescription(existingResult.otherDescription);
+      }
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult]);
+
   // Calculate score based on flowchart logic
   useEffect(() => {
     if (mainAnswer !== null) {
@@ -72,7 +98,7 @@ const Question15: React.FC = () => {
         setScore(null);
       }
     }
-  }, [mainAnswer, copyingAnswers]);
+  }, [mainAnswer, copyingAnswers, copyingScenarios.length]);
 
   // Save result when score is calculated
   useEffect(() => {

@@ -8,9 +8,13 @@ const Question14: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 14);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -43,6 +47,31 @@ const Question14: React.FC = () => {
     `When you are reading ${getPronoun("object")} a story?`,
     `When you are talking to ${getPronoun("object")}?`
   ];
+
+  // Restore any existing answer from Redux store
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore scenario answers
+      if (existingResult.scenarioAnswers && Array.isArray(existingResult.scenarioAnswers)) {
+        setScenarioAnswers(existingResult.scenarioAnswers);
+      }
+      
+      // Restore follow-up answers
+      if (existingResult.followUp1Answer !== undefined) {
+        setFollowUp1Answer(existingResult.followUp1Answer);
+      }
+      if (existingResult.followUp2Answer !== undefined) {
+        setFollowUp2Answer(existingResult.followUp2Answer);
+      }
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
@@ -87,7 +116,7 @@ const Question14: React.FC = () => {
         setScore(null);
       }
     }
-  }, [mainAnswer, scenarioAnswers, followUp1Answer, followUp2Answer]);
+  }, [mainAnswer, scenarioAnswers, followUp1Answer, followUp2Answer, scenarios.length]);
 
   // Save result when score is calculated
   useEffect(() => {

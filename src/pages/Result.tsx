@@ -23,8 +23,8 @@ interface QuestionResult {
 
 const Result = () => {
   // Get results and child info from Redux store
-  const questionResults = useSelector((state: RootState) => (state.answers as any).questionResults || []);
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults || []);
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
   const childName = childInfo?.childName || "your child";
   const childGender = childInfo?.gender || "unknown";
   

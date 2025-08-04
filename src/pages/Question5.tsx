@@ -8,10 +8,14 @@ const Question5: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
   const childGender = childInfo?.gender || "unknown";
+  
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 5);
   
   // Get gender-specific pronouns
   const getPronoun = (type: "subject" | "object" | "possessive") => {
@@ -54,6 +58,32 @@ const Question5: React.FC = () => {
     `Flap ${getPronoun("possessive")} hands near ${getPronoun("possessive")} face?`
   ];
 
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore sub-answers
+      const subAnswers = existingResult.subAnswers || [];
+      const zeroAnswersCount = zeroQuestions.length;
+      const oneAnswersCount = oneQuestions.length;
+      
+      // Split sub-answers into zero examples, one examples, and frequency
+      const zeroAnswers = subAnswers.slice(0, zeroAnswersCount) as ("yes" | "no")[];
+      const oneAnswers = subAnswers.slice(zeroAnswersCount, zeroAnswersCount + oneAnswersCount) as ("yes" | "no")[];
+      const frequency = subAnswers[zeroAnswersCount + oneAnswersCount] as "yes" | "no" | null;
+      
+      setZeroExamples(zeroAnswers);
+      setOneExamples(oneAnswers);
+      if (frequency) setFrequencyAnswer(frequency);
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult, zeroQuestions.length, oneQuestions.length]);
+
   // Calculate score based on complex flowchart logic
   useEffect(() => {
     if (mainAnswer === "no") {
@@ -88,7 +118,7 @@ const Question5: React.FC = () => {
         }
       }
     }
-  }, [mainAnswer, zeroExamples, oneExamples, frequencyAnswer]);
+  }, [mainAnswer, zeroExamples, oneExamples, frequencyAnswer, oneQuestions.length, zeroQuestions.length]);
 
   // Save result when score is calculated
   useEffect(() => {

@@ -8,9 +8,13 @@ const Question8: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 8);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -49,6 +53,31 @@ const Question8: React.FC = () => {
     "Get excited about another child?"
   ];
 
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore all answers from subAnswers array
+      const savedSubAnswers = existingResult.subAnswers || [];
+      const subAnswersCount = subQuestions.length;
+      
+      // Structure: [followUpAnswer, subQuestions..., frequencyAnswer]
+      const followUp = savedSubAnswers[0] as "yes" | "no" | null;
+      const subAns = savedSubAnswers.slice(1, 1 + subAnswersCount) as ("yes" | "no")[];
+      const frequency = savedSubAnswers[1 + subAnswersCount] as "yes" | "no" | null;
+      
+      if (followUp) setFollowUpAnswer(followUp);
+      setSubAnswers(subAns);
+      if (frequency) setFrequencyAnswer(frequency);
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult, subQuestions.length]);
+
   // Calculate score based on flowchart logic
   useEffect(() => {
     if (mainAnswer === "yes") {
@@ -84,7 +113,7 @@ const Question8: React.FC = () => {
         }
       }
     }
-  }, [mainAnswer, followUpAnswer, subAnswers, frequencyAnswer]);
+  }, [mainAnswer, followUpAnswer, subAnswers, frequencyAnswer, subQuestions.length]);
 
   // Save result when score is calculated
   useEffect(() => {

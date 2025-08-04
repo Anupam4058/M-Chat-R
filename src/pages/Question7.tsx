@@ -8,9 +8,13 @@ const Question7: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 7);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -46,6 +50,31 @@ const Question7: React.FC = () => {
     "An animal in the yard?"
   ];
 
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore all answers from subAnswers array
+      const savedSubAnswers = existingResult.subAnswers || [];
+      const subAnswersCount = subQuestions.length;
+      
+      // Structure: [subQuestions..., followUpAnswer, finalAnswer]
+      const subAns = savedSubAnswers.slice(0, subAnswersCount) as ("yes" | "no")[];
+      const followUp = savedSubAnswers[subAnswersCount] as "yes" | "no" | null;
+      const final = savedSubAnswers[subAnswersCount + 1] as "yes" | "no" | null;
+      
+      setSubAnswers(subAns);
+      if (followUp) setFollowUpAnswer(followUp);
+      if (final) setFinalAnswer(final);
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult, subQuestions.length]);
+
   // Calculate score based on flowchart logic
   useEffect(() => {
     // Check if we have all necessary answers
@@ -72,7 +101,7 @@ const Question7: React.FC = () => {
         }
       }
     }
-  }, [mainAnswer, subAnswers, followUpAnswer, finalAnswer]);
+  }, [mainAnswer, subAnswers, followUpAnswer, finalAnswer, subQuestions.length]);
 
   // Save result when score is calculated
   useEffect(() => {

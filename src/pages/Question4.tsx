@@ -8,9 +8,13 @@ const Question4: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 4);
 
   // State for main answer and sub-questions
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | null>(null);
@@ -26,6 +30,22 @@ const Question4: React.FC = () => {
     "Furniture?",
     "Playground equipment?"
   ];
+
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore sub-answers
+      const savedSubAnswers = existingResult.subAnswers || [];
+      setSubAnswers(savedSubAnswers as ("yes" | "no")[]);
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
@@ -44,7 +64,7 @@ const Question4: React.FC = () => {
         }
       }
     }
-  }, [mainAnswer, subAnswers]);
+  }, [mainAnswer, subAnswers, subQuestions.length]);
 
   // Save result when score is calculated
   useEffect(() => {
@@ -114,10 +134,6 @@ const Question4: React.FC = () => {
 
   const getTotalQuestions = () => {
     return subQuestions.length;
-  };
-
-  const isAllQuestionsAnswered = () => {
-    return subAnswers.length === subQuestions.length;
   };
 
   const canGoPrev = () => {

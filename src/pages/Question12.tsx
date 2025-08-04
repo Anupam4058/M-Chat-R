@@ -8,9 +8,13 @@ const Question12: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get child info from Redux store
-  const childInfo = useSelector((state: RootState) => (state.answers as any).childInfo);
+  // Get child info and question results from Redux store
+  const childInfo = useSelector((state: RootState) => (state as any).childInfo);
+  const questionResults = useSelector((state: RootState) => (state as any).questionResults);
   const childName = childInfo?.childName || "your child";
+
+  // Find existing result for this question
+  const existingResult = questionResults?.find((result: any) => result.questionId === 12);
   const childGender = childInfo?.gender || "unknown";
   
   // Get gender-specific pronouns
@@ -37,6 +41,34 @@ const Question12: React.FC = () => {
 
   // State for "Most Often" decision
   const [mostOften, setMostOften] = useState<"zero" | "one" | null>(null);
+
+  // Effect to restore state from existing result
+  useEffect(() => {
+    if (existingResult?.completed) {
+      // Restore main answer
+      setMainAnswer(existingResult.mainAnswer);
+      
+      // Restore sub-answers - Question12 has noise, zero, and one sections
+      const subAnswers = existingResult.subAnswers || [];
+      const noiseCount = noiseQuestions.length;
+      const zeroCount = zeroQuestions.length;
+      
+      // Structure: [noiseAnswers..., zeroAnswers..., oneAnswers..., mostOften?]
+      const noiseAnswers = subAnswers.slice(0, noiseCount) as ("yes" | "no")[];
+      const zeroAnswers = subAnswers.slice(noiseCount, noiseCount + zeroCount) as ("yes" | "no")[];
+      const oneAnswers = subAnswers.slice(noiseCount + zeroCount, noiseCount + zeroCount + oneQuestions.length) as ("yes" | "no")[];
+      const mostOftenValue = subAnswers[noiseCount + zeroCount + oneQuestions.length] as "zero" | "one" | null;
+      
+      setNoiseAnswers(noiseAnswers);
+      setZeroExamples(zeroAnswers);
+      setOneExamples(oneAnswers);
+      if (mostOftenValue) setMostOften(mostOftenValue);
+      
+      // Restore the result score
+      const finalScore = existingResult.result === "pass" ? 0 : 1;
+      setScore(finalScore);
+    }
+  }, [existingResult]);
 
   // State for current section
   const [currentSection, setCurrentSection] = useState<"main" | "noise" | "zero" | "one" | "mostOften">("main");

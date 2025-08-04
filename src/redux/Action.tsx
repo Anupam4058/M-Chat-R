@@ -25,10 +25,12 @@ export type ActionTypes =
   | { type: "update_answer"; payload: { index: number; answer: AnswerState } }
   | { type: "SET_CURRENT_QUESTION"; payload: number }
   | { type: "SAVE_QUESTION_RESULT"; payload: { questionId: number; result: "pass" | "fail"; mainAnswer: "yes" | "no"; subAnswers: ("yes" | "no" | "zero" | "one")[] } }
+  | { type: "SAVE_COMPLEX_QUESTION_RESULT"; payload: { questionId: number; result: "pass" | "fail"; mainAnswer: "yes" | "no"; complexData: any } }
   | { type: "CLEAR_QUESTION_RESULT"; payload: { questionId: number } }
   | { type: "SET_QUESTION_COMPLETED"; payload: { questionId: number; completed: boolean } }
   | { type: "SAVE_CHILD_INFO"; payload: ChildInfoData }
-  | { type: "CLEAR_CHILD_INFO"; payload: void };
+  | { type: "CLEAR_CHILD_INFO"; payload: void }
+  | { type: "CLEAR_ALL_DATA"; payload: void };
 
 /**
  * Action creator for updating an answer
@@ -67,6 +69,23 @@ export const saveQuestionResult = (
 });
 
 /**
+ * Action creator for saving complex question results (like Question18)
+ * @param questionId - Question ID (1-20)
+ * @param result - Pass or fail result
+ * @param mainAnswer - Main yes/no answer
+ * @param complexData - Complex data object with specific question properties
+ */
+export const saveComplexQuestionResult = (
+  questionId: number, 
+  result: "pass" | "fail", 
+  mainAnswer: "yes" | "no", 
+  complexData: any
+): ActionTypes => ({
+  type: "SAVE_COMPLEX_QUESTION_RESULT",
+  payload: { questionId, result, mainAnswer, complexData }
+});
+
+/**
  * Action creator for clearing a question result
  * @param questionId - Question ID to clear
  */
@@ -99,5 +118,13 @@ export const saveChildInfo = (childInfo: ChildInfoData): ActionTypes => ({
  */
 export const clearChildInfo = (): ActionTypes => ({
   type: "CLEAR_CHILD_INFO",
+  payload: undefined
+});
+
+/**
+ * Action creator for clearing all assessment data (child info and question results)
+ */
+export const clearAllData = (): ActionTypes => ({
+  type: "CLEAR_ALL_DATA",
   payload: undefined
 });

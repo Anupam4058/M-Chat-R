@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { saveChildInfo, ChildInfoData } from "../redux/Action";
+import { RootState } from "../redux/Store";
 import {isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
 
 interface ChildInfoFormData {
@@ -16,6 +17,10 @@ interface ChildInfoFormData {
 const ChildInfo: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  
+  // Get existing child info from Redux store
+  const existingChildInfo = useSelector((state: RootState) => (state as any).childInfo);
+  
   const [formData, setFormData] = useState<ChildInfoFormData>({
     guardianName: "",
     guardianPhone: "",
@@ -24,6 +29,20 @@ const ChildInfo: React.FC = () => {
     dateOfBirth: "",
     city: "",
   });
+
+  // Initialize form with existing data when component mounts
+  useEffect(() => {
+    if (existingChildInfo) {
+      setFormData({
+        guardianName: existingChildInfo.guardianName || "",
+        guardianPhone: existingChildInfo.guardianPhone || "",
+        childName: existingChildInfo.childName || "",
+        gender: existingChildInfo.gender || "",
+        dateOfBirth: existingChildInfo.dateOfBirth || "",
+        city: existingChildInfo.city || "",
+      });
+    }
+  }, [existingChildInfo]);
 
   const [errors, setErrors] = useState<Partial<Record<keyof ChildInfoFormData, string>>>({});
 
