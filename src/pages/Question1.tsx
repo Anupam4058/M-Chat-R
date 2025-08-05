@@ -29,6 +29,8 @@ const Question1: React.FC = () => {
   const [userExample, setUserExample] = useState<string>("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentQuestionType, setCurrentQuestionType] = useState<"zero" | "one" | null>(null);
+  const [noExamplesChecked, setNoExamplesChecked] = useState<boolean>(false);
+  const [examplesSaved, setExamplesSaved] = useState<boolean>(false);
 
   const zeroExampleQuestions = [
     "Look at object?",
@@ -275,6 +277,16 @@ const Question1: React.FC = () => {
     return zeroExampleQuestions.length + oneExampleQuestions.length;
   };
 
+  // Check if textarea requirement is met (either examples saved or checkbox checked)
+  const isTextareaRequirementMet = () => {
+    // If main answer is "no", no textarea requirement needed
+    if (mainAnswer === "no") {
+      return true;
+    }
+    // If main answer is "yes", require either saved examples or checkbox
+    return examplesSaved || noExamplesChecked;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
       <style>
@@ -355,24 +367,83 @@ const Question1: React.FC = () => {
           {/* Instructions based on main answer */}
           {mainAnswer === "yes" && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 mb-4">
-                Please give me an example of how {childName} will respond if you point at something?
+              <p className="text-blue-800 font-semibold mb-4">
+                Please give me an example of how {childName} will respond if you point at something.
               </p>
-              <div className="space-y-3">
-                <label htmlFor="userExample" className="block text-sm font-medium text-blue-800">
-                  Describe {childName}'s behavior when you point at something:
-                </label>
-                <textarea
-                  id="userExample"
-                  value={userExample}
-                  onChange={(e) => setUserExample(e.target.value)}
-                  placeholder="For example: 'When I point at a toy, he looks at the toy and sometimes reaches for it'"
-                  className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={3}
-                />
-                <p className="text-xs text-blue-600">
-                  This helps us understand {childName}'s specific responses to pointing gestures.
-                </p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left side - Description */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-blue-800 mb-2">
+                    Description:
+                  </h4>
+                  <p className="text-sm text-gray-700">
+                    Describe {childName}'s behavior when you point at something:
+                  </p>
+                  
+                  {/* Info button below description */}
+                  <div className="inline-flex items-center gap-3 bg-blue-50 text-blue-800 px-4 py-2 rounded-lg border border-blue-200 shadow-sm">
+                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold">i</span>
+                    </div>
+                    <span className="text-xs text-blue-700">
+                      This helps us understand {childName}'s specific responses to pointing gestures.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right side - Input field */}
+                <div className="space-y-3">
+                  <textarea
+                    id="userExample"
+                    value={userExample}
+                    onChange={(e) => setUserExample(e.target.value)}
+                    placeholder="For example: 'When I point at a toy, he looks at the toy and sometimes reaches for it'"
+                    className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={6}
+                  />
+                  
+                  {/* Save button and checkbox row */}
+                  <div className="flex items-center justify-between">
+                    {/* Checkbox for no examples */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="noExamples"
+                        checked={noExamplesChecked}
+                        onChange={(e) => {
+                          setNoExamplesChecked(e.target.checked);
+                          // Reset saved state when checkbox is unchecked
+                          if (!e.target.checked) {
+                            setExamplesSaved(false);
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <label htmlFor="noExamples" className="text-sm text-gray-700">
+                        I don't have any examples
+                      </label>
+                    </div>
+                    
+                    {/* Save button */}
+                    <button
+                      onClick={() => {
+                        // Save the example and set saved state
+                        if (userExample.trim() !== "") {
+                          setExamplesSaved(true);
+                          console.log('Saving example:', userExample);
+                        }
+                      }}
+                      disabled={userExample.trim() === ""}
+                      className={`px-4 py-2 text-sm rounded-md transition-colors shadow-sm ${
+                        userExample.trim() === "" 
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                          : "bg-blue-500 text-white hover:bg-blue-600"
+                      }`}
+                    >
+                      {examplesSaved ? "Saved ✓" : "Save"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -386,7 +457,7 @@ const Question1: React.FC = () => {
           )}
 
           {/* Sub-Questions Progress Bar */}
-          {mainAnswer !== null && !showModal && score === null && (
+          {mainAnswer !== null && !showModal && score === null && isTextareaRequirementMet() && (
             <div className="mb-4">
               <div className="w-full bg-gray-200 rounded-full h-1 mb-2">
                 <div 
@@ -401,7 +472,7 @@ const Question1: React.FC = () => {
           )}
 
           {/* Two Boxes Layout for Sub-Questions */}
-          {mainAnswer !== null && !showModal && (
+          {mainAnswer !== null && !showModal && isTextareaRequirementMet() && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-6">
 
               {/* Left Box - 0 Examples (Pass Behaviors) - Show when mainAnswer is "yes", currentQuestionType is "zero", or when there are zero answers */}
