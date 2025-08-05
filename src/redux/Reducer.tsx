@@ -18,6 +18,7 @@ interface QuestionResult {
   result: "pass" | "fail";
   mainAnswer: "yes" | "no";
   subAnswers: ("yes" | "no" | "zero" | "one")[];
+  mostOften?: "zero" | "one";
   completed: boolean;
 }
 
@@ -77,6 +78,7 @@ const handleAnswers = (state: AnswersState = initialState, action: ActionTypes):
         result: action.payload.result,
         mainAnswer: action.payload.mainAnswer,
         subAnswers: action.payload.subAnswers,
+        mostOften: action.payload.mostOften,
         completed: true,
       };
       
