@@ -24,7 +24,7 @@ interface State extends questionType {
 export type ActionTypes = 
   | { type: "update_answer"; payload: { index: number; answer: AnswerState } }
   | { type: "SET_CURRENT_QUESTION"; payload: number }
-  | { type: "SAVE_QUESTION_RESULT"; payload: { questionId: number; result: "pass" | "fail"; mainAnswer: "yes" | "no"; subAnswers: ("yes" | "no" | "zero" | "one")[]; mostOften?: "zero" | "one" } }
+  | { type: "SAVE_QUESTION_RESULT"; payload: { questionId: number; result: "pass" | "fail"; mainAnswer: "yes" | "no"; subAnswers: ("yes" | "no" | "zero" | "one")[]; mostOften?: "zero" | "one"; userExample?: string } }
   | { type: "SAVE_COMPLEX_QUESTION_RESULT"; payload: { questionId: number; result: "pass" | "fail"; mainAnswer: "yes" | "no"; complexData: any } }
   | { type: "CLEAR_QUESTION_RESULT"; payload: { questionId: number } }
   | { type: "SET_QUESTION_COMPLETED"; payload: { questionId: number; completed: boolean } }
@@ -58,16 +58,18 @@ export const setCurrentQuestion = (index: number): ActionTypes => ({
  * @param mainAnswer - Main yes/no answer
  * @param subAnswers - Array of sub-question answers
  * @param mostOften - Which behavior type is most often (optional)
+ * @param userExample - User's text example (optional)
  */
 export const saveQuestionResult = (
   questionId: number, 
   result: "pass" | "fail", 
   mainAnswer: "yes" | "no", 
   subAnswers: ("yes" | "no" | "zero" | "one")[],
-  mostOften?: "zero" | "one"
+  mostOften?: "zero" | "one",
+  userExample?: string
 ): ActionTypes => ({
   type: "SAVE_QUESTION_RESULT",
-  payload: { questionId, result, mainAnswer, subAnswers, mostOften }
+  payload: { questionId, result, mainAnswer, subAnswers, mostOften, userExample }
 });
 
 /**

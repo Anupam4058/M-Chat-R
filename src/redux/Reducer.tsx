@@ -19,6 +19,7 @@ interface QuestionResult {
   mainAnswer: "yes" | "no";
   subAnswers: ("yes" | "no" | "zero" | "one")[];
   mostOften?: "zero" | "one";
+  userExample?: string;
   completed: boolean;
 }
 
@@ -79,6 +80,7 @@ const handleAnswers = (state: AnswersState = initialState, action: ActionTypes):
         mainAnswer: action.payload.mainAnswer,
         subAnswers: action.payload.subAnswers,
         mostOften: action.payload.mostOften,
+        userExample: action.payload.userExample,
         completed: true,
       };
       

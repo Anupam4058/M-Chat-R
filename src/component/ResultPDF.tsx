@@ -73,8 +73,8 @@ interface ResultPDFProps {
   results: Array<{
     title: string;
     description?: string;
-    mainAnswer?: string;
     answer?: "pass" | "fail";
+    userExample?: string;
     subAnswers?: Array<{
       title: string;
       answer: "yes" | "no";
@@ -95,31 +95,16 @@ const ResultPDF: React.FC<ResultPDFProps> = ({ results }) => (
             </Text>
             {question.description && (
               <Text style={styles.subQuestion}>
-                Description: {question.description}
+                Question: {question.description}
               </Text>
             )}
-            {question.mainAnswer && (
-              <Text style={styles.mainAnswer}>
-                Main Answer: {question.mainAnswer.toUpperCase()}
+            {question.userExample && (
+              <Text style={styles.subQuestion}>
+                User Example: "{question.userExample}"
               </Text>
-            )}
-            {question.subAnswers && question.subAnswers.length > 0 && (
-              <View>
-                <Text style={styles.subQuestion}>Sub-questions:</Text>
-                {question.subAnswers.map((subAnswer, subIndex) => (
-                  <View key={subIndex}>
-                    <Text style={styles.subQuestion}>
-                      • {subAnswer.title}
-                    </Text>
-                    <Text style={styles.subAnswer}>
-                      Answer: {subAnswer.answer.toUpperCase()}
-                    </Text>
-                  </View>
-                ))}
-              </View>
             )}
             <Text style={styles.result}>
-              Final Result: {question.answer?.toUpperCase() || 'Not Answered'}
+              Result: {question.answer?.toUpperCase() || 'Not Answered'}
             </Text>
           </View>
         ))}

@@ -87,6 +87,11 @@ const Question1: React.FC = () => {
         setMostOften(existingResult.mostOften);
       }
       
+      // Restore userExample if it was provided
+      if (existingResult.userExample) {
+        setUserExample(existingResult.userExample);
+      }
+      
       // Reset restoring flag after a short delay to allow all state updates to complete
       setTimeout(() => {
         setIsRestoring(false);
@@ -158,11 +163,12 @@ const Question1: React.FC = () => {
           result,
           mainAnswer || "no",
           [...zeroExamples, ...oneExamples],
-          mostOften || undefined
+          mostOften || undefined,
+          userExample || undefined
         )
       );
     }
-  }, [score, mainAnswer, zeroExamples, oneExamples, mostOften, dispatch, isRestoring]);
+  }, [score, mainAnswer, zeroExamples, oneExamples, mostOften, userExample, dispatch, isRestoring]);
 
   const handleMainAnswer = (answer: "yes" | "no") => {
     setMainAnswer(answer);
@@ -693,27 +699,7 @@ const Question1: React.FC = () => {
             </div>
           )}
 
-          {/* Result Display */}
-          {score !== null && (
-            <div className="mb-6 p-4 border rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">
-                {score === 0 ? (
-                  <span className="text-green-800">✅ PASS</span>
-                ) : (
-                  <span className="text-red-800">❌ FAIL</span>
-                )}
-              </h3>
-              <p className={`text-sm ${score === 0
-                  ? "text-green-700" 
-                  : "text-red-700"
-              }`}>
-                {score === 0 
-                  ? `${childName} shows appropriate responses to pointing.` 
-                  : `${childName} may need further evaluation for this behavior.`
-                }
-              </p>
-            </div>
-          )}
+
 
           {/* Navigation */}
           <div className="flex justify-between mt-8">

@@ -3,6 +3,7 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import ResultPDF from './ResultPDF';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/Store';
+import QuestionsData from '../data/questionsData';
 
 interface PDFDownloadProps {
   results: Array<{
@@ -19,13 +20,19 @@ const PDFDownload: React.FC<PDFDownloadProps> = ({ results }) => {
   // Prepare complete data for PDF in the format expected by ResultPDF
   const pdfData = questionResults
     .filter((result: any) => result.completed)
-    .map((result: any) => ({
-      title: `Question ${result.questionId}`,
-      description: "", // Could be populated with actual question text if needed
-      mainAnswer: result.mainAnswer,
-      answer: result.result,
-      subAnswers: [] // Could be populated with sub-answers if needed
-    }));
+    .map((result: any) => {
+      // Find the question data for this result
+      const questionData = QuestionsData.find((q: any) => q.id === result.questionId);
+      const questionTitle = questionData ? questionData.title : `Question ${result.questionId}`;
+      
+      return {
+        title: `Question ${result.questionId}`,
+        description: questionTitle,
+        answer: result.result,
+        userExample: result.userExample,
+        subAnswers: [] // Could be populated with sub-answers if needed
+      };
+    });
 
   return (
     <PDFDownloadLink
