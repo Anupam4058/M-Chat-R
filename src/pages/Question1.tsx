@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { saveQuestionResult } from "../redux/Action";
+import { saveQuestionResult, clearQuestionResult } from "../redux/Action";
 import { RootState } from "../redux/Store";
 
 const Question1: React.FC = () => {
@@ -22,6 +22,9 @@ const Question1: React.FC = () => {
   const [oneExamples, setOneExamples] = useState<("yes" | "no")[]>([]);
   const [score, setScore] = useState<0 | 1 | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const [mostOften, setMostOften] = useState<"zero" | "one" | null>(null);
   const [userExample, setUserExample] = useState<string>("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -42,7 +45,15 @@ const Question1: React.FC = () => {
 
   // Effect to restore state from existing result
   useEffect(() => {
+    // Skip restoration if we're in the middle of a reset
+    if (isResetting) {
+      return;
+    }
+    
     if (existingResult?.completed) {
+      // Set restoring flag to prevent save effect from running
+      setIsRestoring(true);
+      
       // Restore main answer
       setMainAnswer(existingResult.mainAnswer);
       
@@ -75,8 +86,24 @@ const Question1: React.FC = () => {
       if (existingResult.mostOften) {
         setMostOften(existingResult.mostOften);
       }
+      
+      // Reset restoring flag after a short delay to allow all state updates to complete
+      setTimeout(() => {
+        setIsRestoring(false);
+      }, 100);
+    } else if (existingResult === null || existingResult === undefined) {
+      // If no existing result, ensure all state is cleared
+      setMainAnswer(null);
+      setZeroExamples([]);
+      setOneExamples([]);
+      setScore(null);
+      setShowModal(false);
+      setMostOften(null);
+      setUserExample("");
+      setCurrentQuestionIndex(0);
+      setCurrentQuestionType(null);
     }
-  }, [existingResult, zeroExampleQuestions.length]);
+  }, [existingResult, isResetting]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
@@ -105,13 +132,11 @@ const Question1: React.FC = () => {
         setScore(1); // FAIL
       }
     }
-  }, [zeroExamples, oneExamples, mainAnswer, zeroExampleQuestions.length, oneExampleQuestions.length]);
+  }, [zeroExamples, oneExamples, mainAnswer]);
 
   // Handle most often selection
   useEffect(() => {
-    console.log("mostOften changed:", mostOften);
     if (mostOften !== null) {
-      console.log("Setting score and closing modal");
       // Immediately set the score and close modal
       setScore(mostOften === "zero" ? 0 : 1);
       setShowModal(false);
@@ -120,6 +145,11 @@ const Question1: React.FC = () => {
 
   // Save result when score is calculated
   useEffect(() => {
+    // Skip saving if we're in the middle of restoring state
+    if (isRestoring) {
+      return;
+    }
+    
     if (score !== null) {
       const result = score === 0 ? "pass" : "fail";
       dispatch(
@@ -132,7 +162,7 @@ const Question1: React.FC = () => {
         )
       );
     }
-  }, [score, mainAnswer, zeroExamples, oneExamples, mostOften, dispatch]);
+  }, [score, mainAnswer, zeroExamples, oneExamples, mostOften, dispatch, isRestoring]);
 
   const handleMainAnswer = (answer: "yes" | "no") => {
     setMainAnswer(answer);
@@ -183,8 +213,42 @@ const Question1: React.FC = () => {
   };
 
   const handleMostOften = (choice: "zero" | "one") => {
-    console.log("Modal selection:", choice);
     setMostOften(choice);
+  };
+
+  const handleResetQuestion = () => {
+    setShowResetModal(true);
+  };
+
+  const handleConfirmReset = () => {
+    // Set resetting flag to prevent state restoration
+    setIsResetting(true);
+    
+    // Clear the result from Redux store first
+    dispatch(clearQuestionResult(1));
+    
+    // Clear all state for this question
+    setMainAnswer(null);
+    setZeroExamples([]);
+    setOneExamples([]);
+    setScore(null);
+    setShowModal(false);
+    setMostOften(null);
+    setUserExample("");
+    setCurrentQuestionIndex(0);
+    setCurrentQuestionType(null);
+    
+    // Close the modal
+    setShowResetModal(false);
+    
+    // Reset the flag after a short delay to allow state updates to complete
+    setTimeout(() => {
+      setIsResetting(false);
+    }, 100);
+  };
+
+  const handleCancelReset = () => {
+    setShowResetModal(false);
   };
 
   const handleNext = () => {
@@ -221,6 +285,11 @@ const Question1: React.FC = () => {
             0% { opacity: 0; transform: translateY(-20px); }
             50% { opacity: 1; transform: translateY(5px); }
             100% { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
           }
         `}
       </style>
@@ -440,11 +509,11 @@ const Question1: React.FC = () => {
           {/* Most Often Decision - Both Boxes Selectable */}
           {showModal && score === null && (
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center" style={{ animation: 'fadeInBounce 1s ease-out' }}>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center" style={{ animation: 'shake 1.5s ease-in-out infinite' }}>
                 Tell me which type of behaviours does {childName} show most often?
               </h2>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-16 relative">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-12 relative">
                 {/* 0 Examples Box - Selectable */}
                 <div
                   onClick={() => handleMostOften("zero")}
@@ -478,20 +547,6 @@ const Question1: React.FC = () => {
                         </div>
                       )
                     ))}
-                  </div>
-                </div>
-
-                {/* OR Text Box */}
-                <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2 z-3 lg:block hidden">
-                  <div className="bg-white border-2 border-gray-300 rounded-lg px-2 py-1 shadow-lg">
-                    <span className="text-sm font-bold text-gray-700">OR</span>
-                  </div>
-                </div>
-
-                {/* OR Text Box for Mobile */}
-                <div className="flex justify-center my-2 lg:hidden">
-                  <div className="bg-white border-2 border-gray-300 rounded-lg px-2 py-1 shadow-lg">
-                    <span className="text-sm font-bold text-gray-700">OR</span>
                   </div>
                 </div>
 
@@ -668,6 +723,20 @@ const Question1: React.FC = () => {
             >
               Previous
             </button>
+            
+            {/* Reset Question Button - Only show if question is completed */}
+            {existingResult?.completed && (
+              <button
+                onClick={handleResetQuestion}
+                className="px-4 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry Question
+              </button>
+            )}
+            
             <button
               onClick={handleNext}
               disabled={score === null}
@@ -681,6 +750,41 @@ const Question1: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Reset Question 1
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to reset this question? This will clear all your answers and you'll need to answer the question again.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelReset}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmReset}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all"
+                >
+                  Reset Question
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
