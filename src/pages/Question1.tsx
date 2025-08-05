@@ -191,6 +191,23 @@ const Question1: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
+      <style>
+        {`
+          @keyframes pop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+          @keyframes pop-red {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+          @keyframes fadeInBounce {
+            0% { opacity: 0; transform: translateY(-20px); }
+            50% { opacity: 1; transform: translateY(5px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
           
@@ -296,130 +313,137 @@ const Question1: React.FC = () => {
 
           {/* Two Boxes Layout for Sub-Questions */}
           {mainAnswer !== null && !showModal && score === null && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-6">
               
-              {/* Left Box - 0 Examples (Pass Behaviors) */}
-              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
-                  <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
-                  Does he/she...
-                </h3>
-                <div className="space-y-4">
-                  {/* Show answered questions in their own divs */}
-                  {zeroExampleQuestions.map((question, index) => (
-                    zeroExamples[index] !== undefined && (
-                      <div key={index} className="bg-white rounded-lg p-4 border border-green-200">
+              {/* Left Box - 0 Examples (Pass Behaviors) - Show when mainAnswer is "yes" or when currentQuestionType is "zero" */}
+              {(mainAnswer === "yes" || currentQuestionType === "zero") && (
+                <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
+                    <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
+                    Does he/she...
+                  </h3>
+                  <div className="space-y-4">
+                    {/* Show answered questions in their own divs */}
+                    {zeroExampleQuestions.map((question, index) => (
+                      zeroExamples[index] !== undefined && (
+                        <div key={index} className="bg-white rounded-lg p-4 border border-green-200">
+                          <div className="flex items-center justify-between">
+                            <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
+                            <div className={`px-4 py-2 rounded-lg font-medium ${
+                              zeroExamples[index] === "yes"
+                                ? "bg-green-500 text-white"
+                                : "bg-red-500 text-white"
+                            }`}>
+                              {zeroExamples[index] === "yes" ? "Yes" : "No"}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                    
+                    {/* Show current question if it's a zero question */}
+                    {currentQuestionType === "zero" && (
+                      <div className="bg-white rounded-lg p-4 border border-green-200">
                         <div className="flex items-center justify-between">
-                          <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
-                          <div className={`px-4 py-2 rounded-lg font-medium ${
-                            zeroExamples[index] === "yes"
-                              ? "bg-green-500 text-white"
-                              : "bg-red-500 text-white"
-                          }`}>
-                            {zeroExamples[index] === "yes" ? "Yes" : "No"}
+                          <p className="text-gray-700 font-medium flex-1 mr-4">
+                            {zeroExampleQuestions[currentQuestionIndex]}
+                          </p>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => handleZeroExample(currentQuestionIndex, "yes")}
+                              className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => handleZeroExample(currentQuestionIndex, "no")}
+                              className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            >
+                              No
+                            </button>
                           </div>
                         </div>
                       </div>
-                    )
-                  ))}
-                  
-                  {/* Show current question if it's a zero question */}
-                  {currentQuestionType === "zero" && (
-                    <div className="bg-white rounded-lg p-4 border border-green-200">
-                      <div className="flex items-center justify-between">
-                        <p className="text-gray-700 font-medium flex-1 mr-4">
-                          {zeroExampleQuestions[currentQuestionIndex]}
-                        </p>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <button
-                            onClick={() => handleZeroExample(currentQuestionIndex, "yes")}
-                            className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          >
-                            Yes
-                          </button>
-                          <button
-                            onClick={() => handleZeroExample(currentQuestionIndex, "no")}
-                            className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          >
-                            No
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-
-              {/* Right Box - 1 Examples (Fail Behaviors) */}
-              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
-                  <span className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
-                  Does he/she... 
-                </h3>
-                <div className="space-y-4">
-                  {/* Show answered questions in their own divs */}
-                  {oneExampleQuestions.map((question, index) => (
-                    oneExamples[index] !== undefined && (
-                      <div key={index} className="bg-white rounded-lg p-4 border border-red-200">
+              )}
+              
+              {/* Right Box - 1 Examples (Fail Behaviors) - Show when mainAnswer is "no" or when currentQuestionType is "one" */}
+              {(mainAnswer === "no" || currentQuestionType === "one") && (
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
+                    <span className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
+                    Does he/she... 
+                  </h3>
+                  <div className="space-y-4">
+                    {/* Show answered questions in their own divs */}
+                    {oneExampleQuestions.map((question, index) => (
+                      oneExamples[index] !== undefined && (
+                        <div key={index} className="bg-white rounded-lg p-4 border border-red-200">
+                          <div className="flex items-center justify-between">
+                            <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
+                            <div className={`px-4 py-2 rounded-lg font-medium ${
+                              oneExamples[index] === "yes"
+                                ? "bg-red-500 text-white"
+                                : "bg-green-500 text-white"
+                            }`}>
+                              {oneExamples[index] === "yes" ? "Yes" : "No"}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                    
+                    {/* Show current question if it's a one question */}
+                    {currentQuestionType === "one" && (
+                      <div className="bg-white rounded-lg p-4 border border-red-200">
                         <div className="flex items-center justify-between">
-                          <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
-                          <div className={`px-4 py-2 rounded-lg font-medium ${
-                            oneExamples[index] === "yes"
-                              ? "bg-red-500 text-white"
-                              : "bg-green-500 text-white"
-                          }`}>
-                            {oneExamples[index] === "yes" ? "Yes" : "No"}
+                          <p className="text-gray-700 font-medium flex-1 mr-4">
+                            {oneExampleQuestions[currentQuestionIndex]}
+                          </p>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => handleOneExample(currentQuestionIndex, "yes")}
+                              className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => handleOneExample(currentQuestionIndex, "no")}
+                              className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            >
+                              No
+                            </button>
                           </div>
                         </div>
                       </div>
-                    )
-                  ))}
-                  
-                  {/* Show current question if it's a one question */}
-                  {currentQuestionType === "one" && (
-                    <div className="bg-white rounded-lg p-4 border border-red-200">
-                      <div className="flex items-center justify-between">
-                        <p className="text-gray-700 font-medium flex-1 mr-4">
-                          {oneExampleQuestions[currentQuestionIndex]}
-                        </p>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <button
-                            onClick={() => handleOneExample(currentQuestionIndex, "yes")}
-                            className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          >
-                            Yes
-                          </button>
-                          <button
-                            onClick={() => handleOneExample(currentQuestionIndex, "no")}
-                            className="px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          >
-                            No
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
           {/* Most Often Decision - Both Boxes Selectable */}
           {showModal && score === null && (
             <div className="mb-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center" style={{ animation: 'fadeInBounce 1s ease-out' }}>
                 Tell me which type of behaviours does {childName} show most often?
-              </h3>
+              </h2>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-16 relative">
                 {/* 0 Examples Box - Selectable */}
                 <div 
                   onClick={() => handleMostOften("zero")}
-                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all shadow-lg hover:shadow-xl ${
                     mostOften === "zero"
-                      ? "border-green-500 bg-green-50 shadow-lg"
+                      ? "border-green-500 bg-green-50 shadow-green-200"
                       : "border-green-200 bg-white hover:border-green-300 hover:bg-green-50"
                   }`}
+                  style={{
+                    animation: 'pop 1.5s infinite'
+                  }}
                 >
                   <h4 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
                     <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
@@ -447,14 +471,31 @@ const Question1: React.FC = () => {
                   </div>
                 </div>
 
+                {/* OR Text Box */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2 z-3 lg:block hidden">
+                  <div className="bg-white border-2 border-gray-300 rounded-lg px-2 py-1 shadow-lg">
+                    <span className="text-sm font-bold text-gray-700">OR</span>
+                  </div>
+                </div>
+
+                {/* OR Text Box for Mobile */}
+                <div className="flex justify-center my-2 lg:hidden">
+                  <div className="bg-white border-2 border-gray-300 rounded-lg px-2 py-1 shadow-lg">
+                    <span className="text-sm font-bold text-gray-700">OR</span>
+                  </div>
+                </div>
+
                 {/* 1 Examples Box - Selectable */}
                 <div 
                   onClick={() => handleMostOften("one")}
-                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all shadow-lg hover:shadow-xl ${
                     mostOften === "one"
-                      ? "border-red-500 bg-red-50 shadow-lg"
+                      ? "border-red-500 bg-red-50 shadow-red-200"
                       : "border-red-200 bg-white hover:border-red-300 hover:bg-red-50"
                   }`}
+                  style={{
+                    animation: 'pop-red 1.5s infinite'
+                  }}
                 >
                   <h4 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
                     <span className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
