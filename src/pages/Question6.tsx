@@ -418,29 +418,6 @@ const Question6: React.FC = () => {
              </div>
            )}
 
-                     {/* Result Display */}
-           {score !== null && (
-            <div className="mb-6 p-4 border rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">
-                {score === 0 ? (
-                  <span className="text-green-800">✅ PASS</span>
-                ) : (
-                  <span className="text-red-800">❌ FAIL</span>
-                )}
-              </h3>
-              <p className={`text-sm ${
-                score === 0 
-                  ? "text-green-700" 
-                  : "text-red-700"
-              }`}>
-                {score === 0 
-                  ? `${childName} shows appropriate pointing behaviors.` 
-                  : `${childName} may need further evaluation for pointing behaviors.`
-                }
-              </p>
-            </div>
-          )}
-
                      {/* Navigation */}
            <div className="flex justify-between mt-8">
              <button
