@@ -128,7 +128,7 @@ const Result = () => {
                         {personalizedTitle}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
-                        {result.questionId === 1 && result.userExample ? (
+                        {result.userExample ? (
                           <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                             <p className="text-xs text-blue-600 font-medium mb-1">User's Example:</p>
                             <p className="text-sm text-gray-800 italic">"{result.userExample}"</p>

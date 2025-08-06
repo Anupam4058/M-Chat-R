@@ -602,10 +602,10 @@ const Question1: React.FC = () => {
                     animation: 'pop 1.5s infinite'
                   }}
                 >
-                  <h4 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
+                  <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
                     <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
                     Does he/she...
-                  </h4>
+                  </h3>
 
                   {/* Show all answered 0 example questions */}
                   <div className="space-y-3">
@@ -613,8 +613,8 @@ const Question1: React.FC = () => {
                       zeroExamples[index] !== undefined && (
                         <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
                           <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4 text-sm">{question}</p>
-                            <div className={`px-3 py-1 rounded-lg text-xs font-medium ${zeroExamples[index] === "yes"
+                            <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                            <div className={`px-3 py-1 rounded-lg font-medium ${zeroExamples[index] === "yes"
                                 ? "bg-green-500 text-white"
                                 : "bg-red-500 text-white"
                               }`}>
@@ -638,10 +638,10 @@ const Question1: React.FC = () => {
                     animation: 'pop-red 1.5s infinite'
                   }}
                 >
-                  <h4 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
+                  <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
                     <span className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
                     Does he/she...
-                  </h4>
+                  </h3>
 
                   {/* Show all answered 1 example questions */}
                   <div className="space-y-3">
@@ -649,8 +649,8 @@ const Question1: React.FC = () => {
                       oneExamples[index] !== undefined && (
                         <div key={index} className="bg-white rounded-lg p-3 border border-red-200">
                           <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4 text-sm">{question}</p>
-                            <div className={`px-3 py-1 rounded-lg text-xs font-medium ${oneExamples[index] === "yes"
+                            <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                            <div className={`px-3 py-1 rounded-lg font-medium ${oneExamples[index] === "yes"
                                 ? "bg-red-500 text-white"
                                 : "bg-green-500 text-white"
                               }`}>
@@ -692,10 +692,10 @@ const Question1: React.FC = () => {
                       ? "border-green-500 bg-green-50 shadow-green-200"
                       : "border-green-200 bg-white"
                     }`}>
-                    <h4 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
+                    <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
                       <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
                       Does he/she...
-                    </h4>
+                    </h3>
 
                     {/* Show all answered 0 example questions */}
                     <div className="space-y-3">
@@ -703,8 +703,8 @@ const Question1: React.FC = () => {
                         zeroExamples[index] !== undefined && (
                           <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
                             <div className="flex items-center justify-between">
-                              <p className="text-gray-700 font-medium flex-1 mr-4 text-sm">{question}</p>
-                              <div className={`px-3 py-1 rounded-lg text-xs font-medium ${zeroExamples[index] === "yes"
+                              <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                              <div className={`px-3 py-1 rounded-lg font-medium ${zeroExamples[index] === "yes"
                                   ? "bg-green-500 text-white"
                                   : "bg-red-500 text-white"
                                 }`}>
@@ -741,10 +741,10 @@ const Question1: React.FC = () => {
                       ? "border-red-500 bg-red-50 shadow-red-200"
                       : "border-red-200 bg-white"
                     }`}>
-                    <h4 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
+                    <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
                       <span className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2"></span>
                       Does he/she...
-                    </h4>
+                    </h3>
 
                     {/* Show all answered 1 example questions */}
                     <div className="space-y-3">
@@ -752,8 +752,8 @@ const Question1: React.FC = () => {
                         oneExamples[index] !== undefined && (
                           <div key={index} className="bg-white rounded-lg p-3 border border-red-200">
                             <div className="flex items-center justify-between">
-                              <p className="text-gray-700 font-medium flex-1 mr-4 text-sm">{question}</p>
-                              <div className={`px-3 py-1 rounded-lg text-xs font-medium ${oneExamples[index] === "yes"
+                              <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                              <div className={`px-3 py-1 rounded-lg font-medium ${oneExamples[index] === "yes"
                                   ? "bg-red-500 text-white"
                                   : "bg-green-500 text-white"
                                 }`}>

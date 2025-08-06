@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { saveQuestionResult } from "../redux/Action";
+import { saveQuestionResult, clearQuestionResult } from "../redux/Action";
 import { RootState } from "../redux/Store";
 
 const Question2: React.FC = () => {
@@ -25,13 +25,13 @@ const Question2: React.FC = () => {
   const [hearingTested, setHearingTested] = useState<"yes" | "no" | null>(null);
   const [hearingResults, setHearingResults] = useState<"normal" | "below-normal" | "inconclusive" | null>(null);
 
-  // State for one-by-one display (only for main assessment)
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  // State for step-by-step display
+  const [currentStep, setCurrentStep] = useState(0); // 0: Q1, 1: Q2, 2: Hearing Test
 
-  const initialQuestions = [
-    "Often ignore sounds?",
-    "Often ignore people?"
-  ];
+  // State for reset functionality
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const hearingResultOptions = [
     "Hearing in normal range",
@@ -41,7 +41,15 @@ const Question2: React.FC = () => {
 
   // Effect to restore state from existing result
   useEffect(() => {
+    // Skip restoration if we're in the middle of a reset
+    if (isResetting) {
+      return;
+    }
+    
     if (existingResult?.completed) {
+      // Set restoring flag to prevent save effect from running
+      setIsRestoring(true);
+      
       // Restore the main answers from subAnswers array
       const subAnswers = existingResult.subAnswers || [];
       if (subAnswers[0]) setIgnoreSounds(subAnswers[0] as "yes" | "no");
@@ -57,8 +65,22 @@ const Question2: React.FC = () => {
       // Restore the result score
       const finalScore = existingResult.result === "pass" ? 0 : 1;
       setInitialScore(finalScore);
+      
+      // Determine current step based on answers
+      if (ignoreSounds !== null && ignorePeople !== null) {
+        if (hearingTested !== null) {
+          setCurrentStep(2);
+        } else {
+          setCurrentStep(1);
+        }
+      }
+      
+      // Reset restoring flag after a short delay to allow all state updates to complete
+      setTimeout(() => {
+        setIsRestoring(false);
+      }, 100);
     }
-  }, [existingResult]);
+  }, [existingResult, isResetting]);
 
   // Calculate initial score based on flowchart logic (only main questions)
   useEffect(() => {
@@ -74,6 +96,11 @@ const Question2: React.FC = () => {
 
   // Save result when main assessment is complete (hearing test doesn't affect result)
   useEffect(() => {
+    // Skip saving if we're restoring state
+    if (isRestoring) {
+      return;
+    }
+    
     if (initialScore !== null) {
       const result = initialScore === 0 ? "pass" : "fail";
       
@@ -91,7 +118,7 @@ const Question2: React.FC = () => {
         )
       );
     }
-  }, [initialScore, ignoreSounds, ignorePeople, dispatch]);
+  }, [initialScore, ignoreSounds, ignorePeople, dispatch, isRestoring]);
 
   const handleNext = () => {
     navigate("/question/3");
@@ -101,28 +128,13 @@ const Question2: React.FC = () => {
     navigate("/question/1");
   };
 
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < initialQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    }
-  };
-
-  const handlePrevQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
-  };
-
-  const handleInitialAnswer = (answer: "yes" | "no") => {
-    if (currentQuestionIndex === 0) {
+  const handleInitialAnswer = (answer: "yes" | "no", questionType: "sounds" | "people") => {
+    if (questionType === "sounds") {
       setIgnoreSounds(answer);
-    } else if (currentQuestionIndex === 1) {
+      setCurrentStep(1); // Move to question 2
+    } else if (questionType === "people") {
       setIgnorePeople(answer);
-    }
-    
-    // Auto-advance to next question
-    if (currentQuestionIndex < initialQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setCurrentStep(2); // Move to hearing test
     }
   };
 
@@ -134,26 +146,36 @@ const Question2: React.FC = () => {
     setHearingResults(result);
   };
 
-  const getCurrentQuestion = () => {
-    return initialQuestions[currentQuestionIndex];
+  const handleResetQuestion = () => {
+    setShowResetModal(true);
   };
 
-  const getCurrentAnswer = () => {
-    if (currentQuestionIndex === 0) return ignoreSounds;
-    if (currentQuestionIndex === 1) return ignorePeople;
-    return null;
+  const handleConfirmReset = () => {
+    // Set resetting flag to prevent state restoration
+    setIsResetting(true);
+    
+    // Clear the result from Redux store first
+    dispatch(clearQuestionResult(2));
+    
+    // Clear all state for this question
+    setIgnoreSounds(null);
+    setIgnorePeople(null);
+    setInitialScore(null);
+    setHearingTested(null);
+    setHearingResults(null);
+    setCurrentStep(0);
+    
+    // Close the modal
+    setShowResetModal(false);
+    
+    // Reset the flag after a short delay to allow state updates to complete
+    setTimeout(() => {
+      setIsResetting(false);
+    }, 100);
   };
 
-  // Progress tracking only for main questions (initial assessment)
-  const getMainQuestionsAnsweredCount = () => {
-    let count = 0;
-    if (ignoreSounds !== null) count++;
-    if (ignorePeople !== null) count++;
-    return count;
-  };
-
-  const getMainQuestionsTotal = () => {
-    return initialQuestions.length; // 2 questions
+  const handleCancelReset = () => {
+    setShowResetModal(false);
   };
 
   const isMainAssessmentComplete = () => {
@@ -170,12 +192,151 @@ const Question2: React.FC = () => {
     return isMainAssessmentComplete() && isHearingTestComplete();
   };
 
-  const canGoPrev = () => {
-    return currentQuestionIndex > 0;
-  };
+  const renderCurrentStep = () => {
+    return (
+      <div className="mb-8">
+        {/* Initial Assessment Questions - Both questions in same container */}
+        {(currentStep >= 0 || ignoreSounds !== null) && (
+          <div className="mb-8">
+            {/* <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">
+                Initial Assessment
+              </h3>
+            </div> */}
 
-  const canGoNext = () => {
-    return currentQuestionIndex < initialQuestions.length - 1;
+            <div className="bg-purple-100 border border-purple-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                Does he/she...
+              </h3>
+              
+                             {/* Question 1 */}
+               <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
+                 <span className="text-gray-700 font-medium text-md">1. often ignore sounds</span>
+                 {ignoreSounds === null ? (
+                   <div className="flex gap-2">
+                     <button
+                       onClick={() => handleInitialAnswer("yes", "sounds")}
+                       className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                     >
+                       YES
+                     </button>
+                     <button
+                       onClick={() => handleInitialAnswer("no", "sounds")}
+                       className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                     >
+                       NO
+                     </button>
+                   </div>
+                 ) : (
+                   <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg">
+                     {ignoreSounds === "yes" ? "YES" : "NO"}
+                   </div>
+                 )}
+               </div>
+
+                             {/* Question 2 - Show if answered or current step is 1 or higher */}
+               {(currentStep >= 1 || ignorePeople !== null) && (
+                 <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200">
+                   <span className="text-gray-700 font-medium text-md">2. often ignore people</span>
+                   {ignorePeople === null ? (
+                     <div className="flex gap-1">
+                       <button
+                         onClick={() => handleInitialAnswer("yes", "people")}
+                         className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                       >
+                         YES
+                       </button>
+                       <button
+                         onClick={() => handleInitialAnswer("no", "people")}
+                         className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                       >
+                         NO
+                       </button>
+                     </div>
+                   ) : (
+                     <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg">
+                       {ignorePeople === "yes" ? "YES" : "NO"}
+                     </div>
+                   )}
+                 </div>
+               )}
+            </div>
+          </div>
+        )}
+
+        {/* Universal Hearing Test - Show if both initial questions are answered */}
+        {isMainAssessmentComplete() && (
+          <div className="mb-8">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">
+                Universal Hearing Test
+              </h3>
+              <p className="text-sm text-gray-600 italic">
+                (This is a universal test for all children and does not affect the assessment result)
+              </p>
+            </div>
+            
+              <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
+               <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-200 mb-4">
+                 <span className="text-gray-700 font-medium text-md">Has {childName}'s hearing been tested?</span>
+                 {hearingTested === null ? (
+                   <div className="flex gap-2">
+                     <button
+                       onClick={() => handleHearingTestAnswer("yes")}
+                       className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                     >
+                       YES
+                     </button>
+                     <button
+                       onClick={() => handleHearingTestAnswer("no")}
+                       className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                     >
+                       NO
+                     </button>
+                   </div>
+                 ) : (
+                   <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg">
+                     {hearingTested === "yes" ? "YES" : "NO"}
+                   </div>
+                 )}
+               </div>
+
+              {/* Hearing Test Results (only if Yes) */}
+              {hearingTested === "yes" && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                    What were the results of the hearing test? (choose one):
+                  </h3>
+                  
+                  <div className="flex flex-col gap-4">
+                    {hearingResultOptions.map((option, index) => {
+                      const resultValue = index === 0 ? "normal" : index === 1 ? "below-normal" : "inconclusive";
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => handleHearingResultAnswer(resultValue as "normal" | "below-normal" | "inconclusive")}
+                          disabled={hearingResults !== null}
+                          className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
+                            hearingResults === resultValue
+                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg"
+                              : hearingResults === null
+                              ? "bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                              : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                          }`}
+                        >
+                          {hearingResults === resultValue && <span className="mr-2">✓</span>}
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -206,180 +367,8 @@ const Question2: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Assessment Section - One by One */}
-          <div className="mb-8">
-            <div className="text-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">
-                Initial Assessment
-              </h3>
-            </div>
-
-            {/* Progress Bar for Main Questions Only */}
-            <div className="mb-4">
-              <div className="w-full bg-gray-200 rounded-full h-1 mb-2">
-                <div 
-                  className="bg-gray-400 h-1 rounded-full" 
-                  style={{ width: `${(getMainQuestionsAnsweredCount() / getMainQuestionsTotal()) * 100}%` }}
-                ></div>
-              </div>
-              <div className="text-center text-sm text-gray-600">
-                {getMainQuestionsAnsweredCount()} of {getMainQuestionsTotal()} main questions answered
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={handlePrevQuestion}
-                disabled={!canGoPrev()}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                  !canGoPrev()
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                ‹
-              </button>
-              
-              <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 flex-1 mx-4">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                  {currentQuestionIndex + 1}. {getCurrentQuestion()}
-                </h3>
-                
-                {/* Question Answer Buttons - Vertical Layout */}
-                <div className="flex flex-col gap-4">
-                  <button
-                    onClick={() => handleInitialAnswer("yes")}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                      getCurrentAnswer() === "yes"
-                        ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                        : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                    }`}
-                  >
-                    {getCurrentAnswer() === "yes" && <span className="mr-2">✓</span>}
-                    Yes
-                  </button>
-                  <button
-                    onClick={() => handleInitialAnswer("no")}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                      getCurrentAnswer() === "no"
-                        ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                        : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                    }`}
-                  >
-                    No
-                  </button>
-                </div>
-              </div>
-
-              <button
-                onClick={handleNextQuestion}
-                disabled={!canGoNext()}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                  !canGoNext()
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                ›
-              </button>
-            </div>
-          </div>
-
-          {/* Final Result Display - Only based on main assessment */}
-          {isMainAssessmentComplete() && (
-            <div className="mb-8 p-4 border rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">
-                {initialScore === 0 ? (
-                  <span className="text-green-800">✅ PASS</span>
-                ) : (
-                  <span className="text-red-800">❌ FAIL</span>
-                )}
-              </h3>
-              <p className={`text-sm ${
-                initialScore === 0 
-                  ? "text-green-700" 
-                  : "text-red-700"
-              }`}>
-                {initialScore === 0 
-                  ? "No concerns about ignoring sounds or people." 
-                  : "Some concerns about ignoring sounds or people."
-                }
-              </p>
-            </div>
-          )}
-
-          {/* Universal Hearing Test Section - Separate Card Below */}
-          <div className="mb-8">
-            <div className="text-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">
-                Universal Hearing Test
-              </h3>
-              <p className="text-sm text-gray-600 italic">
-                (This is a universal test for all children and does not affect the assessment result)
-              </p>
-            </div>
-            
-            <div className="bg-blue-100 border border-blue-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                Has {childName}'s hearing been tested?
-              </h3>
-              
-              {/* Question Answer Buttons - Vertical Layout */}
-              <div className="flex flex-col gap-4 mb-6">
-                <button
-                  onClick={() => handleHearingTestAnswer("yes")}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                    hearingTested === "yes"
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg"
-                      : "bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
-                  }`}
-                >
-                  {hearingTested === "yes" && <span className="mr-2">✓</span>}
-                  Yes
-                </button>
-                <button
-                  onClick={() => handleHearingTestAnswer("no")}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                    hearingTested === "no"
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg"
-                      : "bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
-                  }`}
-                >
-                  No
-                </button>
-              </div>
-
-              {/* Hearing Test Results (only if Yes) */}
-              {hearingTested === "yes" && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                    What were the results of the hearing test? (choose one):
-                  </h3>
-                  
-                  {/* Result Options - Vertical Layout */}
-                  <div className="flex flex-col gap-4">
-                    {hearingResultOptions.map((option, index) => {
-                      const resultValue = index === 0 ? "normal" : index === 1 ? "below-normal" : "inconclusive";
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => handleHearingResultAnswer(resultValue as "normal" | "below-normal" | "inconclusive")}
-                          className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                            hearingResults === resultValue
-                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg"
-                              : "bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
-                          }`}
-                        >
-                          {hearingResults === resultValue && <span className="mr-2">✓</span>}
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Step-by-step content */}
+          {renderCurrentStep()}
 
           {/* Navigation */}
           <div className="flex justify-between mt-8">
@@ -389,6 +378,20 @@ const Question2: React.FC = () => {
             >
               Previous
             </button>
+            
+            {/* Reset Question Button - Only show if question is completed */}
+            {existingResult?.completed && (
+              <button
+                onClick={handleResetQuestion}
+                className="px-4 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry Question
+              </button>
+            )}
+            
             <button
               onClick={handleNext}
               disabled={!isAssessmentComplete()}
@@ -403,6 +406,41 @@ const Question2: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Reset Question 2
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to reset this question? This will clear all your answers and you'll need to answer the question again.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelReset}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmReset}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all"
+                >
+                  Reset Question
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
