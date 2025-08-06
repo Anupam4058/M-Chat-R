@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { saveQuestionResult } from "../redux/Action";
+import { saveQuestionResult, clearQuestionResult } from "../redux/Action";
 import { RootState } from "../redux/Store";
 
 const Question6: React.FC = () => {
@@ -42,6 +42,11 @@ const Question6: React.FC = () => {
   // State for current section
   const [currentSection, setCurrentSection] = useState<"main" | "sub" | "followup">("main");
 
+  // Reset state variables
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+
   const subQuestions = [
     `Reach for the object with ${getPronoun("possessive")} whole hand?`,
     "Lead you to the object?",
@@ -51,7 +56,7 @@ const Question6: React.FC = () => {
 
   // Effect to restore state from existing result
   useEffect(() => {
-    if (existingResult?.completed) {
+    if (existingResult?.completed && !isResetting) {
       // Restore main answer
       setMainAnswer(existingResult.mainAnswer);
       
@@ -69,6 +74,11 @@ const Question6: React.FC = () => {
       // Restore the result score
       const finalScore = existingResult.result === "pass" ? 0 : 1;
       setScore(finalScore);
+      
+      // If main answer was "yes", set current section to main
+      if (existingResult.mainAnswer === "yes") {
+        setCurrentSection("main");
+      }
     }
   }, [existingResult, subQuestions.length]);
 
@@ -131,6 +141,8 @@ const Question6: React.FC = () => {
     setCurrentQuestionIndex(0);
     
     if (answer === "yes") {
+      // Immediately set score to 0 (PASS) for "Yes" answer
+      setScore(0);
       setCurrentSection("main");
     } else {
       setCurrentSection("sub");
@@ -139,14 +151,14 @@ const Question6: React.FC = () => {
 
   const handleSubAnswer = (answer: "yes" | "no") => {
     const newSubAnswers = [...subAnswers];
-    newSubAnswers[currentQuestionIndex] = answer;
+    newSubAnswers[getAnsweredCount()] = answer;
     setSubAnswers(newSubAnswers);
     
     // Auto-advance to next question or check if we need follow-up
-    if (currentQuestionIndex < subQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    if (getAnsweredCount() < subQuestions.length - 1) {
+      // Continue to next question automatically
     } else {
-      // Only proceed if all questions are answered
+      // All questions answered, check if we need follow-up
       const allAnswered = newSubAnswers.every(answer => answer !== undefined && answer !== null);
       if (allAnswered) {
         // Check if any sub-questions were answered "Yes"
@@ -188,6 +200,36 @@ const Question6: React.FC = () => {
 
   const handlePrev = () => {
     navigate("/question/5");
+  };
+
+  // Reset handlers
+  const handleResetQuestion = () => {
+    setShowResetModal(true);
+  };
+
+  const handleConfirmReset = () => {
+    setIsResetting(true);
+    
+    // Clear all state
+    setMainAnswer(null);
+    setSubAnswers([]);
+    setScore(null);
+    setCurrentQuestionIndex(0);
+    setFollowUpAnswer(null);
+    setCurrentSection("main");
+    
+    // Clear from Redux store
+    dispatch(clearQuestionResult(6));
+    
+    // Close modal
+    setShowResetModal(false);
+    
+    // Reset the resetting flag after a short delay
+    setTimeout(() => setIsResetting(false), 100);
+  };
+
+  const handleCancelReset = () => {
+    setShowResetModal(false);
   };
 
   const getCurrentQuestion = () => {
@@ -273,17 +315,17 @@ const Question6: React.FC = () => {
             </div>
           </div>
 
-          {/* Instructions for No path */}
-          {mainAnswer === "no" && currentSection !== "main" && (
+                     {/* Instructions for No path */}
+           {mainAnswer === "no" && currentSection !== "main" && score === null && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-800">
-                If there is something {childName} wants that is out of reach, such as a snack or toy that is out of reach, how does {getPronoun("subject")} get it? (If parent does not give a 0 example below, ask each individually.)
+                If there is something {childName} wants that is out of reach, such as a snack or toy that is out of reach, how does {getPronoun("subject")} get it? 
               </p>
             </div>
           )}
 
-          {/* Sub-Questions Section */}
-          {currentSection === "sub" && (
+                     {/* Sub-Questions Section */}
+           {(currentSection === "sub" || currentSection === "followup" || (score !== null && mainAnswer === "no")) && (
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
@@ -291,115 +333,93 @@ const Question6: React.FC = () => {
                 </h3>
               </div>
               
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="w-full bg-gray-200 rounded-full h-1 mb-2">
-                  <div 
-                    className="bg-gray-400 h-1 rounded-full" 
-                    style={{ width: `${(getAnsweredCount() / getTotalQuestions()) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="text-center text-sm text-gray-600">
-                  {getAnsweredCount()} of {getTotalQuestions()} questions answered
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={handlePrevQuestion}
-                  disabled={!canGoPrev()}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    !canGoPrev()
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  ‹
-                </button>
-                
-                <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 flex-1 mx-4">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                    {currentQuestionIndex + 1}. {getCurrentQuestion()}
-                  </h3>
-                  
-                  {/* Sub-Question Answer Buttons - Vertical Layout */}
-                  <div className="flex flex-col gap-4">
-                    <button
-                      onClick={() => handleSubAnswer("yes")}
-                      className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                        getCurrentAnswer() === "yes"
-                          ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                          : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                      }`}
-                    >
-                      {getCurrentAnswer() === "yes" && <span className="mr-2">✓</span>}
-                      Yes
-                    </button>
-                    <button
-                      onClick={() => handleSubAnswer("no")}
-                      className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                        getCurrentAnswer() === "no"
-                          ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                          : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                      }`}
-                    >
-                      No
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleNextQuestion}
-                  disabled={!canGoNext()}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    !canGoNext()
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  ›
-                </button>
-              </div>
+                             {/* Questions Box */}
+               <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
+                 {/* All Answered Questions - Always show all answered questions */}
+                 {subQuestions.map((question, index) => {
+                   if (subAnswers[index] !== null && subAnswers[index] !== undefined) {
+                     return (
+                       <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
+                         <span className="text-gray-700 font-medium text-md">
+                           {index + 1}. {question}
+                         </span>
+                         <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg">
+                           {subAnswers[index] === "yes" ? "YES" : "NO"}
+                         </div>
+                       </div>
+                     );
+                   }
+                   return null;
+                 })}
+                 
+                                   {/* Current Question - Show only if not all questions are answered and not in follow-up */}
+                  {getAnsweredCount() < subQuestions.length && currentSection === "sub" && (
+                   <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
+                     <span className="text-gray-700 font-medium text-md">
+                       {getAnsweredCount() + 1}. {subQuestions[getAnsweredCount()]}
+                     </span>
+                     <div className="flex gap-2">
+                       <button
+                         onClick={() => handleSubAnswer("yes")}
+                         className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                       >
+                         YES
+                       </button>
+                       <button
+                         onClick={() => handleSubAnswer("no")}
+                         className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                       >
+                         NO
+                       </button>
+                     </div>
+                   </div>
+                 )}
+               </div>
             </div>
           )}
 
-          {/* Follow-up Question */}
-          {currentSection === "followup" && (
-            <div className="mb-6">
-              <div className="text-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-700">
-                  If you said "Show me," would {getPronoun("subject")} point at it?
-                </h3>
-              </div>
-              
-              <div className="flex flex-col gap-4">
-                <button
-                  onClick={() => handleFollowUpAnswer("yes")}
-                  className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                    followUpAnswer === "yes"
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                      : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                  }`}
-                >
-                  {followUpAnswer === "yes" && <span className="mr-2">✓</span>}
-                  Yes
-                </button>
-                <button
-                  onClick={() => handleFollowUpAnswer("no")}
-                  className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                    followUpAnswer === "no"
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                      : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                  }`}
-                >
-                  No
-                </button>
-              </div>
-            </div>
-          )}
+                     {/* Follow-up Question Box */}
+           {(currentSection === "followup" || (followUpAnswer !== null && mainAnswer === "no")) && (
+             <div className="mb-6">
+               <div className="text-center mb-4">
+                 <h3 className="text-lg font-semibold text-gray-700">
+                   Follow-up Question
+                 </h3>
+               </div>
+               
+               <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                 {/* Show the follow-up question */}
+                 <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-200 mb-3">
+                   <span className="text-gray-700 font-medium text-md">
+                     If you said "Show me," would {getPronoun("subject")} point at it?
+                   </span>
+                   {followUpAnswer !== null ? (
+                     <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg">
+                       {followUpAnswer === "yes" ? "YES" : "NO"}
+                     </div>
+                   ) : (
+                     <div className="flex gap-2">
+                       <button
+                         onClick={() => handleFollowUpAnswer("yes")}
+                         className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                       >
+                         YES
+                       </button>
+                       <button
+                         onClick={() => handleFollowUpAnswer("no")}
+                         className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                       >
+                         NO
+                       </button>
+                     </div>
+                   )}
+                 </div>
+               </div>
+             </div>
+           )}
 
-          {/* Result Display */}
-          {score !== null && (
+                     {/* Result Display */}
+           {score !== null && (
             <div className="mb-6 p-4 border rounded-lg">
               <h3 className="text-lg font-semibold mb-2">
                 {score === 0 ? (
@@ -421,30 +441,79 @@ const Question6: React.FC = () => {
             </div>
           )}
 
-          {/* Navigation */}
-          <div className="flex justify-between mt-8">
-            <button
-              onClick={handlePrev}
-              className="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-all"
-            >
-              Previous
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={score === null}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-                score !== null
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+                     {/* Navigation */}
+           <div className="flex justify-between mt-8">
+             <button
+               onClick={handlePrev}
+               className="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-all"
+             >
+               Previous
+             </button>
+             
+             {/* Reset Question Button - Only show if question is completed */}
+             {existingResult?.completed && (
+               <button
+                 onClick={handleResetQuestion}
+                 className="px-4 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all flex items-center gap-2"
+               >
+                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                 </svg>
+                 Retry Question
+               </button>
+             )}
+             
+             <button
+               onClick={handleNext}
+               disabled={score === null}
+               className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                 score !== null
+                   ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg"
+                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
+               }`}
+             >
+               Next
+             </button>
+           </div>
+                 </div>
+       </div>
+
+       {/* Reset Confirmation Modal */}
+       {showResetModal && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+             <div className="text-center">
+               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                 <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                 </svg>
+               </div>
+               <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                 Reset Question 6
+               </h3>
+               <p className="text-gray-600 mb-6">
+                 Are you sure you want to reset this question? This will clear all your answers and you'll need to answer the question again.
+               </p>
+               <div className="flex gap-3 justify-center">
+                 <button
+                   onClick={handleCancelReset}
+                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-all"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   onClick={handleConfirmReset}
+                   className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all"
+                 >
+                   Reset Question
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+     </div>
+   );
+ };
 
 export default Question6; 
