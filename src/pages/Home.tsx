@@ -15,7 +15,7 @@ const Home = () => {
   const handleStartNewAssessment = () => {
     // Clear any existing data before starting new assessment
     dispatch(clearAllData());
-    navigate("/child-info");
+    navigate("/profile");
   };
 
   return (
