@@ -63,6 +63,7 @@ const Question7: React.FC = () => {
   // Effect to restore state from existing result
   useEffect(() => {
     if (existingResult?.completed && !isResetting) {
+      setIsRestoring(true);
       // Restore main answer
       setMainAnswer(existingResult.mainAnswer);
       
@@ -82,8 +83,27 @@ const Question7: React.FC = () => {
       // Restore the result score
       const finalScore = existingResult.result === "pass" ? 0 : 1;
       setScore(finalScore);
+      
+      // Restore example box states
+      setUserExample(existingResult.userExample || "");
+      setNoExamplesChecked(!!existingResult.noExamplesChecked);
+      setExamplesSaved(!!existingResult.examplesSaved);
+      
+      setTimeout(() => setIsRestoring(false), 100);
+    } else if (existingResult === null || existingResult === undefined) {
+      // If no existing result, ensure all state is cleared
+      setMainAnswer(null);
+      setSubAnswers([]);
+      setScore(null);
+      setFollowUpAnswer(null);
+      setFinalAnswer(null);
+      setCurrentQuestionIndex(0);
+      setCurrentSection("main");
+      setUserExample("");
+      setNoExamplesChecked(false);
+      setExamplesSaved(false);
     }
-  }, [existingResult, subQuestions.length]);
+  }, [existingResult, subQuestions.length, isResetting]);
 
   // Auto-proceed to questions when example is saved or checkbox is checked
   useEffect(() => {
@@ -122,6 +142,10 @@ const Question7: React.FC = () => {
 
   // Save result when score is calculated
   useEffect(() => {
+    if (isRestoring) {
+      return;
+    }
+    
     if (score !== null) {
       const result = score === 0 ? "pass" : "fail";
       const allSubAnswers = [...subAnswers];
@@ -137,11 +161,15 @@ const Question7: React.FC = () => {
           7,
           result,
           mainAnswer || "no",
-          allSubAnswers
+          allSubAnswers,
+          undefined,
+          userExample || undefined,
+          noExamplesChecked,
+          examplesSaved
         )
       );
     }
-  }, [score, mainAnswer, subAnswers, followUpAnswer, finalAnswer, dispatch]);
+  }, [score, mainAnswer, subAnswers, followUpAnswer, finalAnswer, userExample, noExamplesChecked, examplesSaved, dispatch, isRestoring]);
 
   const handleMainAnswer = (answer: "yes" | "no") => {
     setMainAnswer(answer);
@@ -291,7 +319,7 @@ const Question7: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
+        <div className="max-w-5xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
           
           {/* Progress Bar */}
           <div className="mb-8">
@@ -376,7 +404,7 @@ const Question7: React.FC = () => {
                      placeholder="For example: Points at airplanes, trucks, bugs, or animals?"
                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
                        score !== null 
-                         ? "border-gray-300 bg-gray-50 text-gray-600" 
+                         ? "border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed" 
                          : "border-blue-300"
                      }`}
                      rows={6}

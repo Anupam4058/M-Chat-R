@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { saveQuestionResult } from "../redux/Action";
+import { saveQuestionResult, clearQuestionResult } from "../redux/Action";
 import { RootState } from "../redux/Store";
 
 const Question13: React.FC = () => {
@@ -32,45 +32,47 @@ const Question13: React.FC = () => {
   const [mainAnswer, setMainAnswer] = useState<"yes" | "no" | null>(null);
   const [followUpAnswer, setFollowUpAnswer] = useState<"yes" | "no" | null>(null);
   const [score, setScore] = useState<0 | 1 | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Effect to restore state from existing result
   useEffect(() => {
+    if (isResetting) return;
     if (existingResult?.completed) {
-      // Restore main answer
+      setIsRestoring(true);
       setMainAnswer(existingResult.mainAnswer);
-      
-      // Restore follow-up answer if exists
       const subAnswers = existingResult.subAnswers || [];
       if (subAnswers[0]) setFollowUpAnswer(subAnswers[0] as "yes" | "no");
-      
-      // Restore the result score
       const finalScore = existingResult.result === "pass" ? 0 : 1;
       setScore(finalScore);
+      setTimeout(() => setIsRestoring(false), 100);
+    } else if (existingResult === null || existingResult === undefined) {
+      setMainAnswer(null);
+      setFollowUpAnswer(null);
+      setScore(null);
     }
-  }, [existingResult]);
+  }, [existingResult, isResetting]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
+    if (isRestoring) return;
     if (mainAnswer === "no") {
-      // No answer immediately results in FAIL (score 1)
-      setScore(1);
+      setScore(1); // FAIL
     } else if (mainAnswer === "yes") {
-      // Yes answer leads to follow-up question
       if (followUpAnswer === "yes") {
-        // "Does he/she walk without holding on to anything?" = Yes → PASS
-        setScore(0);
+        setScore(0); // PASS
       } else if (followUpAnswer === "no") {
-        // "Does he/she walk without holding on to anything?" = No → FAIL
-        setScore(1);
+        setScore(1); // FAIL
       } else {
-        // Follow-up question not answered yet
         setScore(null);
       }
     }
-  }, [mainAnswer, followUpAnswer]);
+  }, [mainAnswer, followUpAnswer, isRestoring]);
 
   // Save result when score is calculated
   useEffect(() => {
+    if (isRestoring) return;
     if (score !== null) {
       const result = score === 0 ? "pass" : "fail";
       const allSubAnswers: ("yes" | "no")[] = [];
@@ -87,7 +89,7 @@ const Question13: React.FC = () => {
         )
       );
     }
-  }, [score, mainAnswer, followUpAnswer, dispatch]);
+  }, [score, mainAnswer, followUpAnswer, dispatch, isRestoring]);
 
   const handleMainAnswer = (answer: "yes" | "no") => {
     setMainAnswer(answer);
@@ -97,6 +99,24 @@ const Question13: React.FC = () => {
 
   const handleFollowUpAnswer = (answer: "yes" | "no") => {
     setFollowUpAnswer(answer);
+  };
+
+  const handleResetQuestion = () => {
+    setShowResetModal(true);
+  };
+
+  const handleConfirmReset = () => {
+    setIsResetting(true);
+    dispatch(clearQuestionResult(13));
+    setMainAnswer(null);
+    setFollowUpAnswer(null);
+    setScore(null);
+    setShowResetModal(false);
+    setTimeout(() => setIsResetting(false), 100);
+  };
+
+  const handleCancelReset = () => {
+    setShowResetModal(false);
   };
 
   const handleNext = () => {
@@ -109,8 +129,17 @@ const Question13: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
+      <style>
+        {`
+          @keyframes fadeInBounce {
+            0% { opacity: 0; transform: translateY(-20px); }
+            50% { opacity: 1; transform: translateY(5px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
+        <div className="max-w-5xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
           
           {/* Progress Bar */}
           <div className="mb-8">
@@ -134,12 +163,11 @@ const Question13: React.FC = () => {
               </h1>
             </div>
             
-            {/* Main Answer Buttons - Vertical Layout */}
-            <div className="flex flex-col gap-4 mb-6">
+            {/* Main Answer Buttons - Horizontal Layout */}
+            <div className="flex gap-4 mb-6 justify-center">
               <button
                 onClick={() => handleMainAnswer("yes")}
-                className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                  mainAnswer === "yes"
+                className={`px-6 py-3 rounded-full font-semibold transition-all border-2 flex items-center justify-center min-w-[120px] ${mainAnswer === "yes"
                     ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
                     : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                 }`}
@@ -149,12 +177,12 @@ const Question13: React.FC = () => {
               </button>
               <button
                 onClick={() => handleMainAnswer("no")}
-                className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                  mainAnswer === "no"
+                className={`px-6 py-3 rounded-full font-semibold transition-all border-2 flex items-center justify-center min-w-[120px] ${mainAnswer === "no"
                     ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
                     : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                 }`}
               >
+                {mainAnswer === "no" && <span className="mr-2">✓</span>}
                 No
               </button>
             </div>
@@ -163,59 +191,34 @@ const Question13: React.FC = () => {
           {/* Follow-up Question */}
           {mainAnswer === "yes" && (
             <div className="mb-8">
-              <div className="bg-purple-100 border border-purple-200 rounded-lg p-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  Does {getPronoun("subject")} walk without holding on to anything?
-                </h2>
-                
-                {/* Follow-up Answer Buttons - Vertical Layout */}
-                <div className="flex flex-col gap-4">
-                  <button
-                    onClick={() => handleFollowUpAnswer("yes")}
-                    className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                      followUpAnswer === "yes"
-                        ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                        : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                    }`}
-                  >
-                    {followUpAnswer === "yes" && <span className="mr-2">✓</span>}
-                    Yes
-                  </button>
-                  <button
-                    onClick={() => handleFollowUpAnswer("no")}
-                    className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                      followUpAnswer === "no"
-                        ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                        : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                    }`}
-                  >
-                    No
-                  </button>
+              <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
+                {/* Follow-up Question Display */}
+                <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
+                  <span className="text-gray-700 font-medium text-md">
+                    Does {getPronoun("subject")} walk without holding on to anything?
+                  </span>
+                  {followUpAnswer === null ? (
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleFollowUpAnswer("yes")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-400 hover:border-purple-500 hover:bg-purple-50"
+                      >
+                        YES
+                      </button>
+                      <button
+                        onClick={() => handleFollowUpAnswer("no")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-400 hover:border-purple-500 hover:bg-purple-50"
+                      >
+                        NO
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={`px-4 py-2 rounded-lg text-md font-semibold ${followUpAnswer === "yes" ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white" : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white"}`}>
+                      {followUpAnswer === "yes" ? "YES" : "NO"}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Result Display */}
-          {score !== null && (
-            <div className="mb-6 p-4 border rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">
-                {score === 0 ? (
-                  <span className="text-green-800">✅ PASS</span>
-                ) : (
-                  <span className="text-red-800">❌ FAIL</span>
-                )}
-              </h3>
-              <p className={`text-sm ${
-                score === 0 
-                  ? "text-green-700" 
-                  : "text-red-700"
-              }`}>
-                {score === 0 
-                  ? `${childName} shows appropriate walking abilities.` 
-                  : `${childName} may need further evaluation for walking development.`
-                }
-              </p>
             </div>
           )}
 
@@ -227,11 +230,24 @@ const Question13: React.FC = () => {
             >
               Previous
             </button>
+            
+            {/* Reset Question Button - Only show if question is completed */}
+            {existingResult?.completed && (
+              <button
+                onClick={handleResetQuestion}
+                className="px-4 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry Question
+              </button>
+            )}
+            
             <button
               onClick={handleNext}
               disabled={score === null}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-                score !== null
+              className={`px-6 py-3 rounded-lg font-semibold transition-all ${score !== null
                   ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
@@ -241,6 +257,41 @@ const Question13: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Reset Question 13
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to reset this question? This will clear all your answers and you'll need to answer the question again.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelReset}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmReset}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all"
+                >
+                  Reset Question
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

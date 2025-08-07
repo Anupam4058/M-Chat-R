@@ -55,7 +55,7 @@ function App() {
           {/* Main questionnaire page */}
           <Route path="/home" element={<Home />} />
           {/* Child information collection page */}
-          <Route path="/child-info" element={<ChildInfo />} />
+          <Route path="/profile" element={<ChildInfo />} />
           {/* Individual question pages */}
           <Route path="/question/1" element={<Question1 />} />
           <Route path="/question/2" element={<Question2 />} />

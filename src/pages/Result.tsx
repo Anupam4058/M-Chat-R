@@ -17,8 +17,11 @@ interface QuestionResult {
   questionId: number;
   result: "pass" | "fail";
   mainAnswer: "yes" | "no";
-  subAnswers: ("yes" | "no")[];
+  subAnswers: ("yes" | "no" | "zero" | "one" | "normal" | "below-normal" | "inconclusive")[];
+  mostOften?: "zero" | "one";
   userExample?: string;
+  noExamplesChecked?: boolean;
+  examplesSaved?: boolean;
   completed: boolean;
 }
 

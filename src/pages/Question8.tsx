@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { saveQuestionResult } from "../redux/Action";
+import { saveQuestionResult, clearQuestionResult } from "../redux/Action";
 import { RootState } from "../redux/Store";
 
 const Question8: React.FC = () => {
@@ -43,6 +43,14 @@ const Question8: React.FC = () => {
   // State for current section
   const [currentSection, setCurrentSection] = useState<"main" | "followup" | "sub" | "frequency">("main");
 
+  // Reset state variables
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  
+  // Ref to prevent unnecessary re-renders
+  const hasSavedRef = useRef(false);
+
   const subQuestions = [
     "Play with another child?",
     "Talk to another child?",
@@ -55,7 +63,7 @@ const Question8: React.FC = () => {
 
   // Effect to restore state from existing result
   useEffect(() => {
-    if (existingResult?.completed) {
+    if (existingResult?.completed && !isResetting) {
       // Restore main answer
       setMainAnswer(existingResult.mainAnswer);
       
@@ -75,11 +83,39 @@ const Question8: React.FC = () => {
       // Restore the result score
       const finalScore = existingResult.result === "pass" ? 0 : 1;
       setScore(finalScore);
+      
+      // Set appropriate current section based on restored state
+      if (existingResult.mainAnswer === "yes") {
+        setCurrentSection("main");
+      } else if (followUp) {
+        if (followUp === "no") {
+          setCurrentSection("followup");
+        } else {
+          // Check if any sub-questions were answered
+          const hasSubAnswers = subAns.some(answer => answer !== null && answer !== undefined);
+          if (hasSubAnswers) {
+            if (frequency !== null) {
+              setCurrentSection("frequency");
+            } else {
+              setCurrentSection("sub");
+            }
+          } else {
+            setCurrentSection("sub");
+          }
+        }
+      } else {
+        setCurrentSection("followup");
+      }
     }
-  }, [existingResult, subQuestions.length]);
+  }, [existingResult, subQuestions.length, isResetting]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
+    // Don't calculate if we're resetting or if score is already set
+    if (isResetting || score !== null) {
+      return;
+    }
+
     if (mainAnswer === "yes") {
       setScore(0); // PASS
       return;
@@ -113,16 +149,26 @@ const Question8: React.FC = () => {
         }
       }
     }
-  }, [mainAnswer, followUpAnswer, subAnswers, frequencyAnswer, subQuestions.length]);
+  }, [mainAnswer, followUpAnswer, subAnswers, frequencyAnswer, subQuestions.length, score, isResetting]);
 
   // Save result when score is calculated
   useEffect(() => {
-    if (score !== null) {
+    if (score !== null && !isResetting && !hasSavedRef.current) {
+      hasSavedRef.current = true;
       const result = score === 0 ? "pass" : "fail";
-      const allSubAnswers = [...subAnswers];
+      
+      // Create the correct data structure: [followUpAnswer, subQuestions..., frequencyAnswer]
+      const allSubAnswers: ("yes" | "no")[] = [];
+      
+      // Add follow-up answer first
       if (followUpAnswer !== null) {
         allSubAnswers.push(followUpAnswer);
       }
+      
+      // Add sub-answers
+      allSubAnswers.push(...subAnswers);
+      
+      // Add frequency answer last
       if (frequencyAnswer !== null) {
         allSubAnswers.push(frequencyAnswer);
       }
@@ -136,7 +182,7 @@ const Question8: React.FC = () => {
         )
       );
     }
-  }, [score, mainAnswer, subAnswers, followUpAnswer, frequencyAnswer, dispatch]);
+  }, [score, mainAnswer, subAnswers, followUpAnswer, frequencyAnswer, dispatch, isResetting]);
 
   const handleMainAnswer = (answer: "yes" | "no") => {
     setMainAnswer(answer);
@@ -221,6 +267,37 @@ const Question8: React.FC = () => {
     navigate("/question/7");
   };
 
+  const handleResetQuestion = () => {
+    setShowResetModal(true);
+  };
+
+  const handleConfirmReset = () => {
+    setIsResetting(true);
+    setShowResetModal(false);
+    
+    // Clear the question result from Redux
+    dispatch(clearQuestionResult(8));
+    
+    // Reset all state
+    setMainAnswer(null);
+    setSubAnswers([]);
+    setScore(null);
+    setCurrentQuestionIndex(0);
+    setFollowUpAnswer(null);
+    setFrequencyAnswer(null);
+    setCurrentSection("main");
+    hasSavedRef.current = false;
+    
+    // Reset the resetting flag after a short delay
+    setTimeout(() => {
+      setIsResetting(false);
+    }, 100);
+  };
+
+  const handleCancelReset = () => {
+    setShowResetModal(false);
+  };
+
   const getCurrentQuestion = () => {
     return subQuestions[currentQuestionIndex];
   };
@@ -254,7 +331,7 @@ const Question8: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
+        <div className="max-w-5xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
           
           {/* Progress Bar */}
           <div className="mb-8">
@@ -278,12 +355,11 @@ const Question8: React.FC = () => {
               </h1>
             </div>
             
-            {/* Main Answer Buttons - Vertical Layout */}
-            <div className="flex flex-col gap-4 mb-6">
+            {/* Main Answer Buttons - Horizontal Layout */}
+            <div className="flex gap-4 mb-6 justify-center">
               <button
                 onClick={() => handleMainAnswer("yes")}
-                className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                  mainAnswer === "yes"
+                className={`px-6 py-3 rounded-full font-semibold transition-all border-2 flex items-center justify-center min-w-[120px] ${mainAnswer === "yes"
                     ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
                     : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                 }`}
@@ -293,48 +369,62 @@ const Question8: React.FC = () => {
               </button>
               <button
                 onClick={() => handleMainAnswer("no")}
-                className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                  mainAnswer === "no"
+                className={`px-6 py-3 rounded-full font-semibold transition-all border-2 flex items-center justify-center min-w-[120px] ${mainAnswer === "no"
                     ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
                     : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                 }`}
               >
+                {mainAnswer === "no" && <span className="mr-2">✓</span>}
                 No
               </button>
             </div>
           </div>
 
-          {/* Follow-up Question */}
-          {currentSection === "followup" && (
+          {/* Instructions for No path */}
+          {mainAnswer === "no" && currentSection !== "main" && score === null && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800">
+                When you are at the playground or supermarket, does {childName} usually respond to other children?
+              </p>
+            </div>
+          )}
+
+          {/* Follow-up Question Box */}
+          {(currentSection === "followup" || (followUpAnswer !== null && mainAnswer === "no")) && (
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
-                  When you are at the playground or supermarket, does {childName} usually respond to other children?
+                  Follow-up Question
                 </h3>
               </div>
               
-              <div className="flex flex-col gap-4">
-                <button
-                  onClick={() => handleFollowUpAnswer("yes")}
-                  className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                    followUpAnswer === "yes"
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                      : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                  }`}
-                >
-                  {followUpAnswer === "yes" && <span className="mr-2">✓</span>}
-                  Yes
-                </button>
-                <button
-                  onClick={() => handleFollowUpAnswer("no")}
-                  className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                    followUpAnswer === "no"
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                      : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                  }`}
-                >
-                  No
-                </button>
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                {/* Show the follow-up question */}
+                <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-200 mb-3">
+                  <span className="text-gray-700 font-medium text-md">
+                    When you are at the playground or supermarket, does {childName} usually respond to other children?
+                  </span>
+                  {followUpAnswer !== null ? (
+                    <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg">
+                      {followUpAnswer === "yes" ? "YES" : "NO"}
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleFollowUpAnswer("yes")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                      >
+                        YES
+                      </button>
+                      <button
+                        onClick={() => handleFollowUpAnswer("no")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                      >
+                        NO
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -349,7 +439,7 @@ const Question8: React.FC = () => {
           )}
 
           {/* Sub-Questions Section */}
-          {currentSection === "sub" && (
+          {(currentSection === "sub" || (score !== null && mainAnswer === "no" && followUpAnswer === "yes")) && (
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
@@ -357,133 +447,88 @@ const Question8: React.FC = () => {
                 </h3>
               </div>
               
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="w-full bg-gray-200 rounded-full h-1 mb-2">
-                  <div 
-                    className="bg-gray-400 h-1 rounded-full" 
-                    style={{ width: `${(getAnsweredCount() / getTotalQuestions()) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="text-center text-sm text-gray-600">
-                  {getAnsweredCount()} of {getTotalQuestions()} questions answered
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={handlePrevQuestion}
-                  disabled={!canGoPrev()}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    !canGoPrev()
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  ‹
-                </button>
+              {/* Questions Box */}
+              <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
+                {/* All Answered Questions - Always show all answered questions */}
+                {subQuestions.map((question, index) => {
+                  if (subAnswers[index] !== null && subAnswers[index] !== undefined) {
+                    return (
+                      <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
+                        <span className="text-gray-700 font-medium text-md">
+                          {index + 1}. {question}
+                        </span>
+                        <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg">
+                          {subAnswers[index] === "yes" ? "YES" : "NO"}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
                 
-                <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 flex-1 mx-4">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                    {currentQuestionIndex + 1}. {getCurrentQuestion()}
-                  </h3>
-                  
-                  {/* Sub-Question Answer Buttons - Vertical Layout */}
-                  <div className="flex flex-col gap-4">
-                    <button
-                      onClick={() => handleSubAnswer("yes")}
-                      className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                        getCurrentAnswer() === "yes"
-                          ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                          : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                      }`}
-                    >
-                      {getCurrentAnswer() === "yes" && <span className="mr-2">✓</span>}
-                      Yes
-                    </button>
-                    <button
-                      onClick={() => handleSubAnswer("no")}
-                      className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                        getCurrentAnswer() === "no"
-                          ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                          : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                      }`}
-                    >
-                      No
-                    </button>
+                {/* Current Question - Show only if not all questions are answered and not in frequency */}
+                {getAnsweredCount() < subQuestions.length && currentSection === "sub" && (
+                  <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
+                    <span className="text-gray-700 font-medium text-md">
+                      {getAnsweredCount() + 1}. {subQuestions[getAnsweredCount()]}
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSubAnswer("yes")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                      >
+                        YES
+                      </button>
+                      <button
+                        onClick={() => handleSubAnswer("no")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                      >
+                        NO
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                <button
-                  onClick={handleNextQuestion}
-                  disabled={!canGoNext()}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    !canGoNext()
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  ›
-                </button>
+                )}
               </div>
             </div>
           )}
 
-          {/* Frequency Question */}
-          {currentSection === "frequency" && (
+          {/* Frequency Question Box */}
+          {(currentSection === "frequency" || (frequencyAnswer !== null && mainAnswer === "no" && followUpAnswer === "yes")) && (
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
-                  Does {childName} respond to other children more than half of the time?
+                  Frequency Question
                 </h3>
               </div>
               
-              <div className="flex flex-col gap-4">
-                <button
-                  onClick={() => handleFrequencyAnswer("yes")}
-                  className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                    frequencyAnswer === "yes"
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                      : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                  }`}
-                >
-                  {frequencyAnswer === "yes" && <span className="mr-2">✓</span>}
-                  Yes
-                </button>
-                <button
-                  onClick={() => handleFrequencyAnswer("no")}
-                  className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                    frequencyAnswer === "no"
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                      : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                  }`}
-                >
-                  No
-                </button>
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+                {/* Show the frequency question */}
+                <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-green-200 mb-3">
+                  <span className="text-gray-700 font-medium text-md">
+                    Does {childName} respond to other children more than half of the time?
+                  </span>
+                  {frequencyAnswer !== null ? (
+                    <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-green-500 to-indigo-500 text-white border-green-500 shadow-lg">
+                      {frequencyAnswer === "yes" ? "YES" : "NO"}
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleFrequencyAnswer("yes")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-green-200 hover:border-green-300 hover:bg-green-50"
+                      >
+                        YES
+                      </button>
+                      <button
+                        onClick={() => handleFrequencyAnswer("no")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-green-200 hover:border-green-300 hover:bg-green-50"
+                      >
+                        NO
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Result Display */}
-          {score !== null && (
-            <div className="mb-6 p-4 border rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">
-                {score === 0 ? (
-                  <span className="text-green-800">✅ PASS</span>
-                ) : (
-                  <span className="text-red-800">❌ FAIL</span>
-                )}
-              </h3>
-              <p className={`text-sm ${
-                score === 0 
-                  ? "text-green-700" 
-                  : "text-red-700"
-              }`}>
-                {score === 0 
-                  ? `${childName} shows appropriate interest in other children.` 
-                  : `${childName} may need further evaluation for social interactions with other children.`
-                }
-              </p>
             </div>
           )}
 
@@ -495,6 +540,20 @@ const Question8: React.FC = () => {
             >
               Previous
             </button>
+            
+            {/* Reset Question Button - Only show if question is completed */}
+            {existingResult?.completed && (
+              <button
+                onClick={handleResetQuestion}
+                className="px-4 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry Question
+              </button>
+            )}
+            
             <button
               onClick={handleNext}
               disabled={score === null}
@@ -509,6 +568,41 @@ const Question8: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Reset Question 8
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to reset this question? This will clear all your answers and you'll need to answer the question again.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelReset}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmReset}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all"
+                >
+                  Reset Question
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -17,9 +17,11 @@ interface QuestionResult {
   questionId: number;
   result: "pass" | "fail";
   mainAnswer: "yes" | "no";
-  subAnswers: ("yes" | "no" | "zero" | "one")[];
+  subAnswers: ("yes" | "no" | "zero" | "one" | "normal" | "below-normal" | "inconclusive")[];
   mostOften?: "zero" | "one";
   userExample?: string;
+  noExamplesChecked?: boolean;
+  examplesSaved?: boolean;
   completed: boolean;
 }
 
@@ -81,6 +83,8 @@ const handleAnswers = (state: AnswersState = initialState, action: ActionTypes):
         subAnswers: action.payload.subAnswers,
         mostOften: action.payload.mostOften,
         userExample: action.payload.userExample,
+        noExamplesChecked: action.payload.noExamplesChecked,
+        examplesSaved: action.payload.examplesSaved,
         completed: true,
       };
       

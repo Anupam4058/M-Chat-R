@@ -60,6 +60,7 @@ const Question2: React.FC = () => {
         if (hearingResult === "normal") setHearingResults("normal");
         else if (hearingResult === "below-normal") setHearingResults("below-normal");
         else if (hearingResult === "inconclusive") setHearingResults("inconclusive");
+        else setHearingResults(null);
       }
       
       // Restore the result score
@@ -103,22 +104,26 @@ const Question2: React.FC = () => {
     
     if (initialScore !== null) {
       const result = initialScore === 0 ? "pass" : "fail";
-      
-      // Create answers array with proper typing (only main questions)
-      const answers: ("yes" | "no")[] = [];
+      // Create answers array with proper typing (main questions + hearing test)
+      const answers: ("yes" | "no" | "normal" | "below-normal" | "inconclusive" | null)[] = [];
       if (ignoreSounds !== null) answers.push(ignoreSounds);
       if (ignorePeople !== null) answers.push(ignorePeople);
-      
+      if (hearingTested !== null) answers.push(hearingTested);
+      if (hearingTested === "yes" && hearingResults !== null) {
+        answers.push(hearingResults);
+      } else if (hearingTested === "no") {
+        answers.push(null); // Placeholder for hearing result if not tested
+      }
       dispatch(
         saveQuestionResult(
           2,
           result,
           "yes", // Main answer is always "yes" since we're asking the questions
-          answers
+          answers as ("yes" | "no" | "normal" | "below-normal" | "inconclusive")[]
         )
       );
     }
-  }, [initialScore, ignoreSounds, ignorePeople, dispatch, isRestoring]);
+  }, [initialScore, ignoreSounds, ignorePeople, hearingTested, hearingResults, dispatch, isRestoring]);
 
   const handleNext = () => {
     navigate("/question/3");
@@ -342,7 +347,7 @@ const Question2: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
+        <div className="max-w-5xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
           
           {/* Progress Bar */}
           <div className="mb-8">

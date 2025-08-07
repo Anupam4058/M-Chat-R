@@ -17,7 +17,7 @@ const Home = () => {
     dispatch(clearAllData());
     navigate("/child-info");
   };
-  
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200 flex flex-col items-center justify-center py-8 px-2">
       <div className="w-full max-w-4xl bg-white/80 rounded-2xl shadow-2xl p-6 md:p-10">

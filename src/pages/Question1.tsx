@@ -94,6 +94,10 @@ const Question1: React.FC = () => {
         setUserExample(existingResult.userExample);
       }
       
+      // Restore noExamplesChecked and examplesSaved states
+      setNoExamplesChecked(!!existingResult.noExamplesChecked);
+      setExamplesSaved(!!existingResult.examplesSaved);
+      
       // Reset restoring flag after a short delay to allow all state updates to complete
       setTimeout(() => {
         setIsRestoring(false);
@@ -109,6 +113,8 @@ const Question1: React.FC = () => {
       setUserExample("");
       setCurrentQuestionIndex(0);
       setCurrentQuestionType(null);
+      setNoExamplesChecked(false);
+      setExamplesSaved(false);
     }
   }, [existingResult, isResetting]);
 
@@ -166,11 +172,13 @@ const Question1: React.FC = () => {
           mainAnswer || "no",
           [...zeroExamples, ...oneExamples],
           mostOften || undefined,
-          userExample || undefined
+          userExample || undefined,
+          noExamplesChecked,
+          examplesSaved
         )
       );
     }
-  }, [score, mainAnswer, zeroExamples, oneExamples, mostOften, userExample, dispatch, isRestoring]);
+  }, [score, mainAnswer, zeroExamples, oneExamples, mostOften, userExample, noExamplesChecked, examplesSaved, dispatch, isRestoring]);
 
   const handleMainAnswer = (answer: "yes" | "no") => {
     setMainAnswer(answer);
@@ -245,6 +253,8 @@ const Question1: React.FC = () => {
     setUserExample("");
     setCurrentQuestionIndex(0);
     setCurrentQuestionType(null);
+    setNoExamplesChecked(false);
+    setExamplesSaved(false);
     
     // Close the modal
     setShowResetModal(false);
@@ -264,7 +274,7 @@ const Question1: React.FC = () => {
   };
 
   const handlePrev = () => {
-    navigate("/child-info");
+    navigate("/profile");
   };
 
   const getAnsweredCount = () => {
@@ -312,7 +322,7 @@ const Question1: React.FC = () => {
         `}
       </style>
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
+        <div className="max-w-5xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
           
           {/* Progress Bar */}
           <div className="mb-8">
@@ -398,8 +408,11 @@ const Question1: React.FC = () => {
                     value={userExample}
                     onChange={(e) => setUserExample(e.target.value)}
                     placeholder="For example: 'When I point at a toy, he looks at the toy and sometimes reaches for it'"
-                    className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    className={`w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                      score !== null ? 'bg-gray-100 cursor-not-allowed' : ''
+                    }`}
                     rows={6}
+                    disabled={score !== null}
                   />
                   
                   {/* Save button and checkbox row */}
@@ -417,7 +430,10 @@ const Question1: React.FC = () => {
                             setExamplesSaved(false);
                           }
                         }}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        disabled={score !== null}
+                        className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
+                          score !== null ? 'cursor-not-allowed opacity-50' : ''
+                        }`}
                       />
                       <label htmlFor="noExamples" className="text-sm text-gray-700">
                         I don't have any examples
@@ -433,9 +449,9 @@ const Question1: React.FC = () => {
                           console.log('Saving example:', userExample);
                         }
                       }}
-                      disabled={userExample.trim() === ""}
+                      disabled={userExample.trim() === "" || score !== null}
                       className={`px-4 py-2 text-sm rounded-md transition-colors shadow-sm ${
-                        userExample.trim() === "" 
+                        userExample.trim() === "" || score !== null
                           ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
                           : "bg-blue-500 text-white hover:bg-blue-600"
                       }`}
