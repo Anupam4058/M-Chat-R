@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { saveComplexQuestionResult } from "../redux/Action";
+import { saveComplexQuestionResult, clearQuestionResult } from "../redux/Action";
 import { RootState } from "../redux/Store";
 
 const Question20: React.FC = () => {
@@ -33,6 +33,9 @@ const Question20: React.FC = () => {
   const [enjoyBouncedSwung, setEnjoyBouncedSwung] = useState<"yes" | "no" | null>(null);
   const [reactionAnswers, setReactionAnswers] = useState<("yes" | "no")[]>([]);
   const [score, setScore] = useState<0 | 1 | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // State for one-by-one display
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -45,7 +48,9 @@ const Question20: React.FC = () => {
 
   // Restore any existing answer from Redux store
   useEffect(() => {
+    if (isResetting) return;
     if (existingResult?.completed) {
+      setIsRestoring(true);
       // Restore main answer
       setMainAnswer(existingResult.mainAnswer);
       
@@ -62,11 +67,20 @@ const Question20: React.FC = () => {
       // Restore the result score
       const finalScore = existingResult.result === "pass" ? 0 : 1;
       setScore(finalScore);
+      
+      setTimeout(() => setIsRestoring(false), 100);
+    } else if (existingResult === null || existingResult === undefined) {
+      setMainAnswer(null);
+      setEnjoyBouncedSwung(null);
+      setReactionAnswers([]);
+      setScore(null);
+      setCurrentQuestionIndex(0);
     }
-  }, [existingResult]);
+  }, [existingResult, isResetting]);
 
   // Calculate score based on flowchart logic
   useEffect(() => {
+    if (isRestoring) return;
     if (mainAnswer === "yes") {
       if (enjoyBouncedSwung === "yes") {
         // "Yes" to main question AND "Yes" to enjoy being bounced/swung → PASS (score 0)
@@ -101,10 +115,11 @@ const Question20: React.FC = () => {
     } else {
       setScore(null);
     }
-  }, [mainAnswer, enjoyBouncedSwung, reactionAnswers]);
+  }, [mainAnswer, enjoyBouncedSwung, reactionAnswers, isRestoring]);
 
   // Save result when score is calculated
   useEffect(() => {
+    if (isRestoring) return;
     if (score !== null) {
       const result = score === 0 ? "pass" : "fail";
       const complexData = {
@@ -121,14 +136,22 @@ const Question20: React.FC = () => {
         )
       );
     }
-  }, [score, mainAnswer, enjoyBouncedSwung, reactionAnswers, dispatch]);
+  }, [score, mainAnswer, enjoyBouncedSwung, reactionAnswers, dispatch, isRestoring]);
 
   const handleMainAnswer = (answer: "yes" | "no") => {
     setMainAnswer(answer);
     setScore(null);
     setEnjoyBouncedSwung(null);
-    setReactionAnswers([]);
-    setCurrentQuestionIndex(0);
+    
+    if (answer === "no") {
+      // If "No" to main question, initialize reaction questions immediately
+      setReactionAnswers(new Array(reactionQuestions.length).fill(null));
+      setCurrentQuestionIndex(0);
+    } else {
+      // If "Yes" to main question, clear reaction answers
+      setReactionAnswers([]);
+      setCurrentQuestionIndex(0);
+    }
   };
 
   const handleEnjoyBouncedSwung = (answer: "yes" | "no") => {
@@ -137,7 +160,7 @@ const Question20: React.FC = () => {
       // "Yes" to enjoy being bounced/swung → PASS (no need for reaction questions)
     } else {
       // "No" to enjoy being bounced/swung → Need reaction questions
-      setReactionAnswers(new Array(reactionQuestions.length).fill(undefined));
+      setReactionAnswers(new Array(reactionQuestions.length).fill(null));
       setCurrentQuestionIndex(0);
     }
   };
@@ -154,18 +177,24 @@ const Question20: React.FC = () => {
     // Don't calculate result immediately - wait for all questions to be answered
   };
 
-
-
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < reactionQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    }
+  const handleResetQuestion = () => {
+    setShowResetModal(true);
   };
 
-  const handlePrevQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
+  const handleConfirmReset = () => {
+    setIsResetting(true);
+    dispatch(clearQuestionResult(20));
+    setMainAnswer(null);
+    setEnjoyBouncedSwung(null);
+    setReactionAnswers([]);
+    setScore(null);
+    setCurrentQuestionIndex(0);
+    setShowResetModal(false);
+    setTimeout(() => setIsResetting(false), 100);
+  };
+
+  const handleCancelReset = () => {
+    setShowResetModal(false);
   };
 
   const handleNext = () => {
@@ -185,26 +214,26 @@ const Question20: React.FC = () => {
   };
 
   const getAnsweredCount = () => {
-    return reactionAnswers.filter(answer => answer !== undefined).length;
+    return reactionAnswers.filter(answer => answer !== null).length;
   };
 
   const getTotalQuestions = () => {
     return reactionQuestions.length;
   };
 
-  const canGoPrev = () => {
-    return currentQuestionIndex > 0;
-  };
-
-  const canGoNext = () => {
-    // Allow next if there are more questions to go to
-    return currentQuestionIndex < reactionQuestions.length - 1;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
+      <style>
+        {`
+          @keyframes fadeInBounce {
+            0% { opacity: 0; transform: translateY(-20px); }
+            50% { opacity: 1; transform: translateY(5px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
+        <div className="max-w-5xl mx-auto bg-white/80 rounded-2xl shadow-2xl p-6 md:p-8">
           
           {/* Progress Bar */}
           <div className="mb-8">
@@ -220,7 +249,7 @@ const Question20: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Question - Always Visible */}
+          {/* Main Question */}
           <div className="mb-8">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
@@ -231,12 +260,11 @@ const Question20: React.FC = () => {
               </h1>
             </div>
             
-            {/* Main Answer Buttons - Vertical Layout */}
-            <div className="flex flex-col gap-4 mb-6">
+            {/* Main Answer Buttons - Horizontal Layout */}
+            <div className="flex gap-4 mb-6 justify-center">
               <button
                 onClick={() => handleMainAnswer("yes")}
-                className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                  mainAnswer === "yes"
+                className={`px-6 py-3 rounded-full font-semibold transition-all border-2 flex items-center justify-center min-w-[120px] ${mainAnswer === "yes"
                     ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
                     : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                 }`}
@@ -246,151 +274,110 @@ const Question20: React.FC = () => {
               </button>
               <button
                 onClick={() => handleMainAnswer("no")}
-                className={`px-8 py-4 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                  mainAnswer === "no"
+                className={`px-6 py-3 rounded-full font-semibold transition-all border-2 flex items-center justify-center min-w-[120px] ${mainAnswer === "no"
                     ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
                     : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
                 }`}
               >
+                {mainAnswer === "no" && <span className="mr-2">✓</span>}
                 No
               </button>
             </div>
           </div>
 
           {/* Enjoy Being Bounced/Swung Question (for "Yes" path) */}
-                    {/* Follow-up question for "Yes" main answer */}
-          {mainAnswer === "yes" && enjoyBouncedSwung === null && score === null && (
+          {mainAnswer === "yes" && (
             <div className="mb-6">
-              <div className="bg-purple-100 border border-purple-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                  Does {getPronoun("subject")} enjoy being bounced or swung?
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-700">
+                  Follow-up Question
                 </h3>
-                
-                {/* Answer Buttons */}
-                <div className="flex flex-col gap-4">
-                  <button
-                    onClick={() => handleEnjoyBouncedSwung("yes")}
-                    className="px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                  >
-                    Yes
-                  </button>
-                  <button
-                    onClick={() => handleEnjoyBouncedSwung("no")}
-                    className="px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                  >
-                    No
-                  </button>
+              </div>
+              
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-200 mb-3">
+                  <span className="text-gray-700 font-medium text-md">
+                    Does {getPronoun("subject")} enjoy being bounced or swung?
+                  </span>
+                  {enjoyBouncedSwung !== null ? (
+                    <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg">
+                      {enjoyBouncedSwung === "yes" ? "YES" : "NO"}
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEnjoyBouncedSwung("yes")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                      >
+                        YES
+                      </button>
+                      <button
+                        onClick={() => handleEnjoyBouncedSwung("no")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                      >
+                        NO
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
           {/* Reaction Questions Section */}
-          {((mainAnswer === "yes" && enjoyBouncedSwung === "no") || mainAnswer === "no") && score === null && (
+          {((mainAnswer === "yes" && enjoyBouncedSwung === "no") || mainAnswer === "no") && (
             <div className="mb-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-700">
                   When you swing or bounce {getPronoun("object")}, how does {getPronoun("subject")} react?
                 </h3>
-                <p className="text-sm text-gray-600 mt-2">
-                  (If parent does not give an example below, ask each individually.)
-                </p>
               </div>
               
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="w-full bg-gray-200 rounded-full h-1 mb-2">
-                  <div 
-                    className="bg-gray-400 h-1 rounded-full" 
-                    style={{ width: `${(getAnsweredCount() / getTotalQuestions()) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="text-center text-sm text-gray-600">
-                  {getAnsweredCount()} of {getTotalQuestions()} questions answered
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={handlePrevQuestion}
-                  disabled={!canGoPrev()}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    !canGoPrev()
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  ‹
-                </button>
+              {/* Questions Box */}
+              <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
+                {/* All Answered Questions - Always show all answered questions */}
+                {reactionQuestions.map((question, index) => {
+                  if (reactionAnswers[index] !== null && reactionAnswers[index] !== undefined) {
+                    return (
+                      <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
+                        <span className="text-gray-700 font-medium text-md">
+                          {index + 1}. {question}
+                        </span>
+                        <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg">
+                          {reactionAnswers[index] === "yes" ? "YES" : "NO"}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
                 
-                <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 flex-1 mx-4">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                    {currentQuestionIndex + 1}. {getCurrentQuestion()}
-                  </h3>
-                  
-                                     {/* Current Question Content */}
-                   <div className="flex flex-col gap-4">
-                     <button
-                       onClick={() => handleReactionAnswer("yes")}
-                       className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                         getCurrentAnswer() === "yes"
-                           ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                           : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                       }`}
-                     >
-                       {getCurrentAnswer() === "yes" && <span className="mr-2">✓</span>}
-                       Yes
-                     </button>
-                     <button
-                       onClick={() => handleReactionAnswer("no")}
-                       className={`px-6 py-3 rounded-lg font-semibold transition-all border-2 flex items-center justify-start ${
-                         getCurrentAnswer() === "no"
-                           ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg"
-                           : "bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                       }`}
-                     >
-                       No
-                     </button>
-                   </div>
-                </div>
-
-                <button
-                  onClick={handleNextQuestion}
-                  disabled={!canGoNext()}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    !canGoNext()
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  ›
-                </button>
+                {/* Current Question - Show only if not all questions are answered */}
+                {getAnsweredCount() < reactionQuestions.length && (
+                  <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
+                    <span className="text-gray-700 font-medium text-md">
+                      {getAnsweredCount() + 1}. {reactionQuestions[getAnsweredCount()]}
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleReactionAnswer("yes")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                      >
+                        YES
+                      </button>
+                      <button
+                        onClick={() => handleReactionAnswer("no")}
+                        className="px-4 py-2 rounded-lg text-md font-semibold transition-all border-2 bg-white text-gray-700 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+                      >
+                        NO
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Result Display */}
-          {score !== null && (
-            <div className="mb-6 p-4 border rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">
-                {score === 0 ? (
-                  <span className="text-green-800">✅ PASS</span>
-                ) : (
-                  <span className="text-red-800">❌ FAIL</span>
-                )}
-              </h3>
-              <p className={`text-sm ${
-                score === 0 
-                  ? "text-green-700" 
-                  : "text-red-700"
-              }`}>
-                {score === 0 
-                  ? `${childName} shows appropriate enjoyment of movement activities.` 
-                  : `${childName} may need further evaluation for movement activity responses.`
-                }
-              </p>
-            </div>
-          )}
 
           {/* Navigation */}
           <div className="flex justify-between mt-8">
@@ -400,11 +387,24 @@ const Question20: React.FC = () => {
             >
               Previous
             </button>
+            
+            {/* Reset Question Button - Only show if question is completed */}
+            {existingResult?.completed && (
+              <button
+                onClick={handleResetQuestion}
+                className="px-4 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry Question
+              </button>
+            )}
+            
             <button
               onClick={handleNext}
               disabled={score === null}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-                score !== null
+              className={`px-6 py-3 rounded-lg font-semibold transition-all ${score !== null
                   ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
@@ -414,6 +414,41 @@ const Question20: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Reset Question 20
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to reset this question? This will clear all your answers and you'll need to answer the question again.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelReset}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmReset}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all"
+                >
+                  Reset Question
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -380,14 +380,14 @@ const Question8: React.FC = () => {
             </div>
           </div>
 
-          {/* Instructions for No path */}
+          {/* Instructions for No path
           {mainAnswer === "no" && currentSection !== "main" && score === null && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-800">
                 When you are at the playground or supermarket, does {childName} usually respond to other children?
               </p>
             </div>
-          )}
+          )} */}
 
           {/* Follow-up Question Box */}
           {(currentSection === "followup" || (followUpAnswer !== null && mainAnswer === "no")) && (
@@ -433,7 +433,7 @@ const Question8: React.FC = () => {
           {currentSection === "sub" && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-800">
-                How does {childName} respond? (If parent does not give a 0 example below, ask each individually.)
+                How does {childName} respond?
               </p>
             </div>
           )}
