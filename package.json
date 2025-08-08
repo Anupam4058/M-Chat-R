@@ -9,6 +9,7 @@
     "libphonenumber-js": "^1.12.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-media-recorder": "^1.7.2",
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.8.0",
     "react-scripts": "5.0.1",
