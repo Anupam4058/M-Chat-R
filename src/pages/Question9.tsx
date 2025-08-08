@@ -333,7 +333,7 @@ const Question9: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
                 9
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-left">
                 Does {childName} show you things by bringing them to you or holding them up for you to see? Not just to get help, but to share?
               </h1>
             </div>
@@ -363,110 +363,129 @@ const Question9: React.FC = () => {
             </div>
           </div>
 
-          {/* Example Box for Yes path */}
+          {/* user example input */}
           {mainAnswer === "yes" && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 font-semibold mb-4">
+            <div className="mb-6">
+              <p className="text-gray-800 font-semibold mb-6 text-center text-lg">
                 Please give me an example of something {childName} might bring to show you or hold up for you to see.
               </p>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left side - Description */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-blue-800 mb-2">
-                    Description:
-                  </h4>
-                  <p className="text-sm text-gray-700">
-                    Describe something {childName} might bring to show you:
-                  </p>
+              
+              <div className="space-y-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                {/* Labels positioned above the textarea in separate boxes */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Left side - Description box */}
+                  <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                      Describe {childName}'s behavior
+                    </h4>
+                    <p className="text-sm text-gray-900">
+                      When {childName} brings things to show you:
+                    </p>
+                  </div>
                   
-                  {/* Info button below description */}
-                  <div className="inline-flex items-center gap-3 bg-blue-50 text-blue-800 px-4 py-2 rounded-lg border border-blue-200 shadow-sm">
-                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold">i</span>
+                  {/* Right side - Info button box */}
+                  <div className="bg-blue-100 border border-blue-200 rounded-lg p-4 flex items-center gap-2">
+                    <div className="w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold">i</span>
                     </div>
-                    <span className="text-xs text-blue-700">
+                    <span className="text-xs text-gray-900">
                       This helps us understand {childName}'s sharing behaviors.
                     </span>
                   </div>
                 </div>
 
-                {/* Right side - Input field */}
-                <div className="space-y-3">
-                  <textarea
-                    id="userExample"
-                    value={userExample}
-                    onChange={(e) => setUserExample(e.target.value)}
-                    placeholder="For example: Brings toys, drawings, flowers, or other items to show you?"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-                      score !== null 
-                        ? "border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed" 
-                        : "border-blue-300"
-                    }`}
-                    rows={6}
-                    disabled={score !== null}
-                  />
-                  
-                  {/* Save button and checkbox row */}
-                  <div className="flex items-center justify-between">
-                    {/* Checkbox for no examples */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="noExamples"
-                        checked={noExamplesChecked}
-                        onChange={(e) => {
-                          setNoExamplesChecked(e.target.checked);
-                          // Reset saved state when checkbox is unchecked
-                          if (!e.target.checked) {
-                            setExamplesSaved(false);
-                          } else {
-                            // When checked, mark as saved and save to Redux
-                            setExamplesSaved(true);
-                            // Save empty example to indicate "no examples"
-                            const allSubAnswers = [...subAnswers];
-                            if (followUpAnswer !== null) {
-                              allSubAnswers.push(followUpAnswer);
-                            }
-                            // Only save to Redux if we have a complete result
-                            if (score !== null) {
-                              const result = score === 0 ? "pass" : "fail";
-                              dispatch(
-                                saveQuestionResult(
-                                  9,
-                                  result,
-                                  mainAnswer || "no",
-                                  allSubAnswers,
-                                  undefined,
-                                  "No examples provided"
-                                )
-                              );
-                            }
-                          }
-                        }}
-                        disabled={score !== null}
-                        className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
-                          score !== null ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      />
-                      <label htmlFor="noExamples" className="text-sm text-gray-700">
-                        I don't have any examples
-                      </label>
-                    </div>
-                    
-                    {/* Save button */}
-                    <button
-                      onClick={saveUserExample}
-                      disabled={userExample.trim() === "" || score !== null}
-                      className={`px-4 py-2 text-sm rounded-md transition-colors shadow-sm ${
-                        userExample.trim() === "" || score !== null
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-                          : "bg-blue-500 text-white hover:bg-blue-600"
+                {/* Full width input field with mic button */}
+                <div className="space-y-4">
+                  <div className="relative">
+                    <textarea
+                      id="userExample"
+                      value={userExample}
+                      onChange={(e) => setUserExample(e.target.value)}
+                      placeholder="Enter your example here..."
+                      className={`w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
+                        score !== null ? 'bg-gray-100 cursor-not-allowed' : ''
                       }`}
+                      rows={4}
+                      disabled={score !== null}
+                    />
+                    
+                    {/* Microphone button positioned at bottom right */}
+                    <button
+                      className="absolute right-3 bottom-3 w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors"
+                      disabled={score !== null}
                     >
-                      {examplesSaved ? "Saved ✓" : "Save"}
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                      </svg>
                     </button>
                   </div>
                 </div>
+              </div>
+              
+              {/* Checkbox and Save button row */}
+              <div className="flex items-center justify-between mt-4">
+                {/* Checkbox for no examples */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="noExamples"
+                    checked={noExamplesChecked}
+                    onChange={(e) => {
+                      setNoExamplesChecked(e.target.checked);
+                      // When checkbox is checked, set saved state to true
+                      if (e.target.checked) {
+                        setExamplesSaved(true);
+                        // Save empty example to indicate "no examples"
+                        const allSubAnswers = [...subAnswers];
+                        if (followUpAnswer !== null) {
+                          allSubAnswers.push(followUpAnswer);
+                        }
+                        // Only save to Redux if we have a complete result
+                        if (score !== null) {
+                          const result = score === 0 ? "pass" : "fail";
+                          dispatch(
+                            saveQuestionResult(
+                              9,
+                              result,
+                              mainAnswer || "no",
+                              allSubAnswers,
+                              undefined,
+                              "No examples provided"
+                            )
+                          );
+                        }
+                      } else {
+                        // When unchecked, clear the saved state but keep the example box visible
+                        setExamplesSaved(false);
+                        setUserExample("");
+                        // Reset current section back to example to hide follow-up questions
+                        setCurrentSection("example");
+                      }
+                    }}
+                    disabled={score !== null}
+                    className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
+                      score !== null ? 'cursor-not-allowed opacity-50' : ''
+                    }`}
+                  />
+                  <label htmlFor="noExamples" className="text-sm text-gray-700">
+                    I don't have any example for now
+                  </label>
+                </div>
+                
+                {/* Save & Next button */}
+                <button
+                  onClick={saveUserExample}
+                  disabled={userExample.trim() === "" || score !== null}
+                  className={`px-6 py-2 text-sm rounded-md transition-colors shadow-sm font-medium ${
+                    userExample.trim() === "" || score !== null
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                      : examplesSaved
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
+                >
+                  {examplesSaved ? "Saved ✓" : "Save & Next >"}
+                </button>
               </div>
             </div>
           )}
@@ -487,7 +506,7 @@ const Question9: React.FC = () => {
                   if (subAnswers[index] !== null && subAnswers[index] !== undefined) {
                     return (
                       <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                        <span className="text-gray-700 font-medium text-md">
+                        <span className="text-gray-700 font-medium text-md text-left">
                           {index + 1}. {question}
                         </span>
                         <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg">
@@ -502,7 +521,7 @@ const Question9: React.FC = () => {
                 {/* Current Question - Show only if not all questions are answered */}
                 {getAnsweredCount() < subQuestions.length && (
                   <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                    <span className="text-gray-700 font-medium text-md">
+                    <span className="text-gray-700 font-medium text-md text-left">
                       {getAnsweredCount() + 1}. {subQuestions[getAnsweredCount()]}
                     </span>
                     <div className="flex gap-2">
@@ -537,7 +556,7 @@ const Question9: React.FC = () => {
               <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
                 {/* Show the follow-up question */}
                 <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-200 mb-3">
-                  <span className="text-gray-700 font-medium text-md">
+                  <span className="text-gray-700 font-medium text-md text-left">
                     Is this sometimes just to show you, not to get help?
                   </span>
                   {followUpAnswer !== null ? (

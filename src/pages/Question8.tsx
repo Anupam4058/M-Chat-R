@@ -350,7 +350,7 @@ const Question8: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
                 8
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-left">
                 Is {childName} interested in children who are not {getPronoun("possessive")} brother or sister?
               </h1>
             </div>
@@ -401,7 +401,7 @@ const Question8: React.FC = () => {
               <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
                 {/* Show the follow-up question */}
                 <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-200 mb-3">
-                  <span className="text-gray-700 font-medium text-md">
+                  <span className="text-gray-700 font-medium text-md text-left">
                     When you are at the playground or supermarket, does {childName} usually respond to other children?
                   </span>
                   {followUpAnswer !== null ? (
@@ -454,7 +454,7 @@ const Question8: React.FC = () => {
                   if (subAnswers[index] !== null && subAnswers[index] !== undefined) {
                     return (
                       <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                        <span className="text-gray-700 font-medium text-md">
+                        <span className="text-gray-700 font-medium text-md text-left">
                           {index + 1}. {question}
                         </span>
                         <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg">
@@ -469,7 +469,7 @@ const Question8: React.FC = () => {
                 {/* Current Question - Show only if not all questions are answered and not in frequency */}
                 {getAnsweredCount() < subQuestions.length && currentSection === "sub" && (
                   <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                    <span className="text-gray-700 font-medium text-md">
+                    <span className="text-gray-700 font-medium text-md text-left">
                       {getAnsweredCount() + 1}. {subQuestions[getAnsweredCount()]}
                     </span>
                     <div className="flex gap-2">
@@ -504,7 +504,7 @@ const Question8: React.FC = () => {
               <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
                 {/* Show the frequency question */}
                 <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-green-200 mb-3">
-                  <span className="text-gray-700 font-medium text-md">
+                  <span className="text-gray-700 font-medium text-md text-left">
                     Does {childName} respond to other children more than half of the time?
                   </span>
                   {frequencyAnswer !== null ? (

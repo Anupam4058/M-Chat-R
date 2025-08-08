@@ -341,7 +341,7 @@ const Question1: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
                 1
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-left">
                 If you point at something across the room, does {childName} look at it?
               </h1>
             </div>
@@ -374,92 +374,108 @@ const Question1: React.FC = () => {
             </div>
           </div>
 
-          {/* Instructions based on main answer */}
+          {/* user example input */}
           {mainAnswer === "yes" && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 font-semibold mb-4">
+            <div className="mb-6">
+              <p className="text-gray-800 font-semibold mb-6 text-center text-lg">
                 Please give me an example of how {childName} will respond if you point at something.
               </p>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left side - Description */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-blue-800 mb-2">
-                    Description:
-                  </h4>
-                  <p className="text-sm text-gray-700">
-                    Describe {childName}'s behavior when you point at something:
-                  </p>
+              
+              <div className="space-y-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                {/* Labels positioned above the textarea in separate boxes */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Left side - Description box */}
+                  <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                      Describe {childName}'s behavior
+                    </h4>
+                    <p className="text-sm text-gray-900">
+                      When you point at anything.
+                    </p>
+                  </div>
                   
-                  {/* Info button below description */}
-                  <div className="inline-flex items-center gap-3 bg-blue-50 text-blue-800 px-4 py-2 rounded-lg border border-blue-200 shadow-sm">
-                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold">i</span>
+                  {/* Right side - Info button box */}
+                  <div className="bg-blue-100 border border-blue-200 rounded-lg p-4 flex items-center gap-2">
+                    <div className="w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold">i</span>
                     </div>
-                    <span className="text-xs text-blue-700">
+                    <span className="text-xs text-gray-900">
                       This helps us understand {childName}'s specific responses to pointing gestures.
                     </span>
                   </div>
                 </div>
 
-                {/* Right side - Input field */}
-                <div className="space-y-3">
+                {/* Full width input field with mic button */}
+                <div className="relative">
                   <textarea
                     id="userExample"
                     value={userExample}
                     onChange={(e) => setUserExample(e.target.value)}
-                    placeholder="For example: 'When I point at a toy, he looks at the toy and sometimes reaches for it'"
-                    className={`w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                    placeholder="Enter your example here..."
+                    className={`w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
                       score !== null ? 'bg-gray-100 cursor-not-allowed' : ''
                     }`}
-                    rows={6}
+                    rows={4}
                     disabled={score !== null}
                   />
                   
-                  {/* Save button and checkbox row */}
-                  <div className="flex items-center justify-between">
-                    {/* Checkbox for no examples */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="noExamples"
-                        checked={noExamplesChecked}
-                        onChange={(e) => {
-                          setNoExamplesChecked(e.target.checked);
-                          // Reset saved state when checkbox is unchecked
-                          if (!e.target.checked) {
-                            setExamplesSaved(false);
-                          }
-                        }}
-                        disabled={score !== null}
-                        className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
-                          score !== null ? 'cursor-not-allowed opacity-50' : ''
-                        }`}
-                      />
-                      <label htmlFor="noExamples" className="text-sm text-gray-700">
-                        I don't have any examples
-                      </label>
-                    </div>
-                    
-                    {/* Save button */}
-                    <button
-                      onClick={() => {
-                        // Save the example and set saved state
-                        if (userExample.trim() !== "") {
-                          setExamplesSaved(true);
-                          console.log('Saving example:', userExample);
-                        }
-                      }}
-                      disabled={userExample.trim() === "" || score !== null}
-                      className={`px-4 py-2 text-sm rounded-md transition-colors shadow-sm ${
-                        userExample.trim() === "" || score !== null
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-                          : "bg-blue-500 text-white hover:bg-blue-600"
-                      }`}
-                    >
-                      {examplesSaved ? "Saved ✓" : "Save"}
-                    </button>
-                  </div>
+                  {/* Microphone button positioned at bottom right */}
+                  <button
+                    className="absolute right-3 bottom-3 w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors"
+                    disabled={score !== null}
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                    </svg>
+                  </button>
                 </div>
+              </div>
+              
+              {/* Checkbox and Save button row */}
+              <div className="flex items-center justify-between mt-4">
+                {/* Checkbox for no examples */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="noExamples"
+                    checked={noExamplesChecked}
+                    onChange={(e) => {
+                      setNoExamplesChecked(e.target.checked);
+                      // Reset saved state when checkbox is unchecked
+                      if (!e.target.checked) {
+                        setExamplesSaved(false);
+                      }
+                    }}
+                    disabled={score !== null}
+                    className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
+                      score !== null ? 'cursor-not-allowed opacity-50' : ''
+                    }`}
+                  />
+                  <label htmlFor="noExamples" className="text-sm text-gray-700">
+                    I don't have any example for now
+                  </label>
+                </div>
+                
+                {/* Save & Next button */}
+                <button
+                  onClick={() => {
+                    // Save the example and set saved state
+                    if (userExample.trim() !== "") {
+                      setExamplesSaved(true);
+                      console.log('Saving example:', userExample);
+                    }
+                  }}
+                  disabled={userExample.trim() === "" || score !== null}
+                  className={`px-6 py-2 text-sm rounded-md transition-colors shadow-sm font-medium ${
+                    userExample.trim() === "" || score !== null
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                      : examplesSaved
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
+                >
+                  {examplesSaved ? "Saved ✓" : "Save & Next >"}
+                </button>
               </div>
             </div>
           )}
@@ -503,8 +519,8 @@ const Question1: React.FC = () => {
                     {zeroExampleQuestions.map((question, index) => (
                       zeroExamples[index] !== undefined && (
                         <div key={index} className="bg-white rounded-lg p-4 border border-green-200">
-                          <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
+                          <div className="flex items-center justify-between text-left">
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                             <div className={`px-4 py-2 rounded-lg font-medium ${zeroExamples[index] === "yes"
                                 ? "bg-green-500 text-white"
                                 : "bg-red-500 text-white"
@@ -520,7 +536,7 @@ const Question1: React.FC = () => {
                     {currentQuestionType === "zero" && score === null && (
                       <div className="bg-white rounded-lg p-4 border border-green-200">
                         <div className="flex items-center justify-between">
-                          <p className="text-gray-700 font-medium flex-1 mr-4">
+                          <p className="text-gray-700 font-medium flex-1 mr-4 text-left">
                             {zeroExampleQuestions[currentQuestionIndex]}
                           </p>
                           <div className="flex gap-2 flex-shrink-0">
@@ -556,8 +572,8 @@ const Question1: React.FC = () => {
                     {oneExampleQuestions.map((question, index) => (
                       oneExamples[index] !== undefined && (
                         <div key={index} className="bg-white rounded-lg p-4 border border-red-200">
-                          <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
+                          <div className="flex items-center justify-between text-left">
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                             <div className={`px-4 py-2 rounded-lg font-medium ${oneExamples[index] === "yes"
                                 ? "bg-red-500 text-white"
                                 : "bg-green-500 text-white"
@@ -573,7 +589,7 @@ const Question1: React.FC = () => {
                     {currentQuestionType === "one" && score === null && (
                       <div className="bg-white rounded-lg p-4 border border-red-200">
                         <div className="flex items-center justify-between">
-                          <p className="text-gray-700 font-medium flex-1 mr-4">
+                          <p className="text-gray-700 font-medium flex-1 mr-4 text-left">
                             {oneExampleQuestions[currentQuestionIndex]}
                           </p>
                           <div className="flex gap-2 flex-shrink-0">
@@ -629,7 +645,7 @@ const Question1: React.FC = () => {
                       zeroExamples[index] !== undefined && (
                         <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
                           <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                             <div className={`px-3 py-1 rounded-lg font-medium ${zeroExamples[index] === "yes"
                                 ? "bg-green-500 text-white"
                                 : "bg-red-500 text-white"
@@ -665,7 +681,7 @@ const Question1: React.FC = () => {
                       oneExamples[index] !== undefined && (
                         <div key={index} className="bg-white rounded-lg p-3 border border-red-200">
                           <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                             <div className={`px-3 py-1 rounded-lg font-medium ${oneExamples[index] === "yes"
                                 ? "bg-red-500 text-white"
                                 : "bg-green-500 text-white"
@@ -719,7 +735,7 @@ const Question1: React.FC = () => {
                         zeroExamples[index] !== undefined && (
                           <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
                             <div className="flex items-center justify-between">
-                              <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                              <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                               <div className={`px-3 py-1 rounded-lg font-medium ${zeroExamples[index] === "yes"
                                   ? "bg-green-500 text-white"
                                   : "bg-red-500 text-white"
@@ -768,7 +784,7 @@ const Question1: React.FC = () => {
                         oneExamples[index] !== undefined && (
                           <div key={index} className="bg-white rounded-lg p-3 border border-red-200">
                             <div className="flex items-center justify-between">
-                              <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                              <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                               <div className={`px-3 py-1 rounded-lg font-medium ${oneExamples[index] === "yes"
                                   ? "bg-red-500 text-white"
                                   : "bg-green-500 text-white"

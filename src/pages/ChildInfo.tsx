@@ -57,8 +57,21 @@ const ChildInfo: React.FC = () => {
   const validatePhoneNumber = (phoneNumber: string): boolean => {
     if (!phoneNumber.trim()) return false;
     
+    // Remove all non-digit characters for validation
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    
+    // Check if it's a valid Indian mobile number (10 digits starting with 6, 7, 8, 9)
+    if (cleanNumber.length === 10 && /^[6-9]\d{9}$/.test(cleanNumber)) {
+      return true;
+    }
+    
+    // Check if it's a valid Indian mobile number with country code (12 digits starting with 91)
+    if (cleanNumber.length === 12 && cleanNumber.startsWith('91') && /^91[6-9]\d{9}$/.test(cleanNumber)) {
+      return true;
+    }
+    
+    // Check if it's a valid international format
     try {
-      // Try to parse the phone number
       const parsedNumber = parsePhoneNumber(phoneNumber);
       return parsedNumber ? isValidPhoneNumber(phoneNumber) : false;
     } catch (error) {
@@ -67,6 +80,21 @@ const ChildInfo: React.FC = () => {
   };
 
   const formatPhoneNumber = (phoneNumber: string): string => {
+    // Remove all non-digit characters
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    
+    // If it's a 10-digit Indian number, add +91 prefix
+    if (cleanNumber.length === 10 && /^[6-9]\d{9}$/.test(cleanNumber)) {
+      return `+91 ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+    }
+    
+    // If it's a 12-digit Indian number with country code, format it
+    if (cleanNumber.length === 12 && cleanNumber.startsWith('91') && /^91[6-9]\d{9}$/.test(cleanNumber)) {
+      const numberWithoutCode = cleanNumber.slice(2);
+      return `+91 ${numberWithoutCode.slice(0, 5)} ${numberWithoutCode.slice(5)}`;
+    }
+    
+    // For international numbers, use the existing logic
     try {
       const parsedNumber = parsePhoneNumber(phoneNumber);
       return parsedNumber ? parsedNumber.formatInternational() : phoneNumber;
@@ -85,7 +113,7 @@ const ChildInfo: React.FC = () => {
     if (!formData.guardianPhone.trim()) {
       newErrors.guardianPhone = "Phone number is required";
     } else if (!validatePhoneNumber(formData.guardianPhone)) {
-      newErrors.guardianPhone = "Please enter a valid phone number (e.g., +91 9876543210)";
+      newErrors.guardianPhone = "Please enter a valid phone number (e.g., 9876543210 or +91 9876543210)";
     }
 
     if (!formData.childName.trim()) {
@@ -196,7 +224,7 @@ const ChildInfo: React.FC = () => {
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
                     errors.guardianPhone ? "border-red-500 bg-red-50" : "border-indigo-300 bg-white/70"
                   }`}
-                  placeholder="+91 9876543210"
+                  placeholder="9876543210"
                 />
                 {errors.guardianPhone && (
                   <p className="text-red-500 text-sm mt-2 flex items-center">
@@ -205,7 +233,7 @@ const ChildInfo: React.FC = () => {
                   </p>
                 )}
                 <p className="text-xs text-indigo-600 mt-2">
-                  Enter number with country code.
+                  Enter Phone Number.
                 </p>
               </div>
             </div>

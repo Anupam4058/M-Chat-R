@@ -85,6 +85,14 @@ const Question14: React.FC = () => {
         }
       }
       
+      // Restore checkbox and saved states
+      if (existingResult.noExamplesChecked !== undefined) {
+        setNoExamplesChecked(existingResult.noExamplesChecked);
+      }
+      if (existingResult.examplesSaved !== undefined) {
+        setExamplesSaved(existingResult.examplesSaved);
+      }
+      
       // Restore the result score
       const finalScore = existingResult.result === "pass" ? 0 : 1;
       setScore(finalScore);
@@ -106,6 +114,9 @@ const Question14: React.FC = () => {
       setScore(null);
       setCurrentQuestionIndex(0);
       setCurrentSection("main");
+      setUserExample("");
+      setExamplesSaved(false);
+      setNoExamplesChecked(false);
     }
   }, [existingResult, isResetting]);
 
@@ -182,7 +193,9 @@ const Question14: React.FC = () => {
           mainAnswer || "no",
           allSubAnswers,
           undefined,
-          noExamplesChecked ? "No examples provided" : (userExample || undefined)
+          noExamplesChecked ? "No examples provided" : (userExample || undefined),
+          noExamplesChecked,
+          examplesSaved
         )
       );
     }
@@ -337,7 +350,7 @@ const Question14: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
                 14
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-left">
                 Does {childName} look you in the eye when you are talking to {getPronoun("object")}, playing with {getPronoun("object")}, or changing {getPronoun("object")}?
               </h1>
             </div>
@@ -367,92 +380,116 @@ const Question14: React.FC = () => {
             </div>
           </div>
 
-          {/* Example Box for Yes answers */}
+          {/* user example input */}
           {mainAnswer === "yes" && (currentSection === "example" || (examplesSaved || noExamplesChecked)) && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 font-semibold mb-4">
+            <div className="mb-6">
+              <p className="text-gray-800 font-semibold mb-6 text-center text-lg">
                 Please give me an example of when {childName} looks you in the eye.
               </p>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left side - Description */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-blue-800 mb-2">
-                    Description:
-                  </h4>
-                  <p className="text-sm text-gray-700">
-                    Describe {childName}'s behavior when looking you in the eye:
-                  </p>
+              
+              <div className="space-y-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                {/* Labels positioned above the textarea in separate boxes */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Left side - Description box */}
+                  <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                      Describe {childName}'s behavior
+                    </h4>
+                    <p className="text-sm text-gray-900">
+                      When {childName} looks you in the eye:
+                    </p>
+                  </div>
                   
-                  {/* Info button below description */}
-                  <div className="inline-flex items-center gap-3 bg-blue-50 text-blue-800 px-4 py-2 rounded-lg border border-blue-200 shadow-sm">
-                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold">i</span>
+                  {/* Right side - Info button box */}
+                  <div className="bg-blue-100 border border-blue-200 rounded-lg p-4 flex items-center gap-2">
+                    <div className="w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold">i</span>
                     </div>
-                    <span className="text-xs text-blue-700">
+                    <span className="text-xs text-gray-900">
                       This helps us understand {childName}'s specific eye contact behaviors.
                     </span>
                   </div>
                 </div>
 
-                {/* Right side - Input field */}
-                <div className="space-y-3">
-                  <textarea
-                    id="userExample"
-                    value={userExample}
-                    onChange={(e) => setUserExample(e.target.value)}
-                    placeholder="For example: 'When I talk to him, he looks directly into my eyes and maintains eye contact'"
-                    className={`w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-                      score !== null ? 'bg-gray-100 cursor-not-allowed' : ''
-                    }`}
-                    rows={6}
-                    disabled={score !== null}
-                  />
-                  
-                  {/* Save button and checkbox row */}
-                  <div className="flex items-center justify-between">
-                    {/* Checkbox for no examples */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="noExamples"
-                        checked={noExamplesChecked}
-                        onChange={(e) => {
-                          setNoExamplesChecked(e.target.checked);
-                          // Reset saved state when checkbox is unchecked
-                          if (!e.target.checked) {
-                            setExamplesSaved(false);
-                          }
-                        }}
-                        className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
-                          score !== null ? 'cursor-not-allowed opacity-50' : ''
-                        }`}
-                        disabled={score !== null}
-                      />
-                      <label htmlFor="noExamples" className="text-sm text-gray-700">
-                        I don't have any examples
-                      </label>
-                    </div>
-                    
-                    {/* Save button */}
-                    <button
-                      onClick={() => {
-                        // Save the example and set saved state
-                        if (userExample.trim() !== "") {
-                          setExamplesSaved(true);
-                          console.log('Saving example:', userExample);
-                        }
-                      }}
-                      disabled={userExample.trim() === "" || score !== null}
-                      className={`px-4 py-2 text-sm rounded-md transition-colors shadow-sm ${
-                        userExample.trim() === "" || score !== null
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-                          : "bg-blue-500 text-white hover:bg-blue-600"
+                {/* Full width input field with mic button */}
+                <div className="space-y-4">
+                  <div className="relative">
+                    <textarea
+                      id="userExample"
+                      value={userExample}
+                      onChange={(e) => setUserExample(e.target.value)}
+                      placeholder="Enter your example here..."
+                      className={`w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
+                        score !== null ? 'bg-gray-100 cursor-not-allowed' : ''
                       }`}
+                      rows={4}
+                      disabled={score !== null}
+                    />
+                    
+                    {/* Microphone button positioned at bottom right */}
+                    <button
+                      className="absolute right-3 bottom-3 w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors"
+                      disabled={score !== null}
                     >
-                      {examplesSaved ? "Saved ✓" : "Save"}
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                      </svg>
                     </button>
                   </div>
                 </div>
+              </div>
+              
+              {/* Checkbox and Save button row */}
+              <div className="flex items-center justify-between mt-4">
+                {/* Checkbox for no examples */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="noExamples"
+                    checked={noExamplesChecked}
+                    onChange={(e) => {
+                      setNoExamplesChecked(e.target.checked);
+                      // When checkbox is checked, set saved state to true
+                      if (e.target.checked) {
+                        setExamplesSaved(true);
+                      } else {
+                        // When unchecked, clear the saved state but keep the example box visible
+                        setExamplesSaved(false);
+                        setUserExample("");
+                        // Reset current section back to example to hide follow-up questions
+                        setCurrentSection("example");
+                      }
+                    }}
+                    disabled={score !== null}
+                    className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
+                      score !== null ? 'cursor-not-allowed opacity-50' : ''
+                    }`}
+                  />
+                  <label htmlFor="noExamples" className="text-sm text-gray-700">
+                    I don't have any example for now
+                  </label>
+                </div>
+                
+                {/* Save & Next button */}
+                <button
+                  onClick={() => {
+                    // Save the example and set saved state
+                    if (userExample.trim() !== "") {
+                      setExamplesSaved(true);
+                      console.log('Saving example:', userExample);
+                    }
+                  }}
+                  disabled={userExample.trim() === "" || score !== null}
+                  className={`px-6 py-2 text-sm rounded-md transition-colors shadow-sm font-medium ${
+                    userExample.trim() === "" || score !== null
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                      : examplesSaved
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
+                >
+                  {examplesSaved ? "Saved ✓" : "Save & Next >"}
+                </button>
               </div>
             </div>
           )}
@@ -472,7 +509,7 @@ const Question14: React.FC = () => {
                   if (scenarioAnswers[idx] !== null && scenarioAnswers[idx] !== undefined) {
                     return (
                       <div key={idx} className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                        <span className="text-gray-700 font-medium text-md">
+                        <span className="text-gray-700 font-medium text-md text-left">
                           {idx + 1}. {question}
                         </span>
                         <div className={`px-4 py-2 rounded-lg text-md font-semibold ${scenarioAnswers[idx] === "yes" ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white" : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white"}`}>
@@ -487,7 +524,7 @@ const Question14: React.FC = () => {
                 {/* Current Scenario Question - Show only if current question is not answered */}
                 {scenarioAnswers[currentQuestionIndex] === null && (
                   <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                    <span className="text-gray-700 font-medium text-md">
+                    <span className="text-gray-700 font-medium text-md text-left">
                       {currentQuestionIndex + 1}. {getCurrentQuestion()}
                     </span>
                     <div className="flex gap-2 flex-shrink-0">
@@ -521,7 +558,7 @@ const Question14: React.FC = () => {
               
               <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
                 <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-200 mb-3">
-                  <span className="text-gray-700 font-medium text-md">
+                  <span className="text-gray-700 font-medium text-md text-left">
                     Does your child look you in the eye every day?
                   </span>
                   {followUp1Answer === null ? (
@@ -560,7 +597,7 @@ const Question14: React.FC = () => {
               
               <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
                 <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-green-200 mb-3">
-                  <span className="text-gray-700 font-medium text-md">
+                  <span className="text-gray-700 font-medium text-md text-left">
                     On a day when you are together all day, does {getPronoun("subject")} look you in the eye at least 5 times?
                   </span>
                   {followUp2Answer === null ? (

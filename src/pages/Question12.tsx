@@ -289,7 +289,8 @@ const Question12: React.FC = () => {
           <div className="mb-8">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">12</div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Does {childName} get upset by everyday noises?</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-left">
+                Does {childName} get upset by everyday noises?</h1>
               </div>
             {/* Main Answer Buttons */}
             <div className="flex gap-4 mb-6 justify-center">
@@ -388,8 +389,8 @@ const Question12: React.FC = () => {
                       {zeroExampleQuestions.map((question, index) => (
                         zeroExamples[index] !== undefined && (
                           <div key={index} className="bg-white rounded-lg p-4 border border-green-200">
-                            <div className="flex items-center justify-between">
-                              <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
+                            <div className="flex items-center justify-between text-left">
+                              <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                               <div className={`px-4 py-2 rounded-lg font-medium ${zeroExamples[index] === "yes"
                                 ? "bg-green-500 text-white"
                                 : "bg-red-500 text-white"
@@ -402,8 +403,8 @@ const Question12: React.FC = () => {
                       ))}
                       {currentQuestionType === "zero" && score === null && zeroExamples[currentQuestionIndex] === undefined && (
                         <div className="bg-white rounded-lg p-4 border border-green-200">
-                          <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4">{zeroExampleQuestions[currentQuestionIndex]}</p>
+                          <div className="flex items-center justify-between text-left">
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{zeroExampleQuestions[currentQuestionIndex]}</p>
                             <div className="flex gap-2 flex-shrink-0">
                               <button
                                 onClick={() => handleZeroExample(currentQuestionIndex, "yes")}
@@ -431,8 +432,8 @@ const Question12: React.FC = () => {
                       {oneExampleQuestions.map((question, index) => (
                         oneExamples[index] !== undefined && (
                           <div key={index} className="bg-white rounded-lg p-4 border border-red-200">
-                            <div className="flex items-center justify-between">
-                              <p className="text-gray-700 font-medium flex-1 mr-4">{question}</p>
+                            <div className="flex items-center justify-between text-left">
+                              <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                               <div className={`px-4 py-2 rounded-lg font-medium ${oneExamples[index] === "yes"
                                 ? "bg-red-500 text-white"
                                 : "bg-green-500 text-white"
@@ -445,8 +446,8 @@ const Question12: React.FC = () => {
                       ))}
                       {currentQuestionType === "one" && score === null && oneExamples[currentQuestionIndex] === undefined && (
                         <div className="bg-white rounded-lg p-4 border border-red-200">
-                          <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4">{oneExampleQuestions[currentQuestionIndex]}</p>
+                          <div className="flex items-center justify-between text-left">
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{oneExampleQuestions[currentQuestionIndex]}</p>
                             <div className="flex gap-2 flex-shrink-0">
                     <button
                                 onClick={() => handleOneExample(currentQuestionIndex, "yes")}
@@ -491,8 +492,8 @@ const Question12: React.FC = () => {
                     {zeroExampleQuestions.map((question, index) => (
                       zeroExamples[index] !== undefined && (
                         <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
-                          <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                          <div className="flex items-center justify-between text-left">
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                             <div className={`px-3 py-1 rounded-lg font-medium ${zeroExamples[index] === "yes"
                               ? "bg-green-500 text-white"
                               : "bg-red-500 text-white"
@@ -522,8 +523,8 @@ const Question12: React.FC = () => {
                     {oneExampleQuestions.map((question, index) => (
                       oneExamples[index] !== undefined && (
                         <div key={index} className="bg-white rounded-lg p-3 border border-red-200">
-                          <div className="flex items-center justify-between">
-                            <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                          <div className="flex items-center justify-between text-left">
+                            <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                             <div className={`px-3 py-1 rounded-lg font-medium ${oneExamples[index] === "yes"
                               ? "bg-red-500 text-white"
                               : "bg-green-500 text-white"
@@ -571,8 +572,8 @@ const Question12: React.FC = () => {
                       {zeroExampleQuestions.map((question, index) => (
                         zeroExamples[index] !== undefined && (
                           <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
-                            <div className="flex items-center justify-between">
-                              <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                            <div className="flex items-center justify-between text-left">
+                              <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                               <div className={`px-3 py-1 rounded-lg font-medium ${zeroExamples[index] === "yes"
                                 ? "bg-green-500 text-white"
                                 : "bg-red-500 text-white"
@@ -613,8 +614,8 @@ const Question12: React.FC = () => {
                       {oneExampleQuestions.map((question, index) => (
                         oneExamples[index] !== undefined && (
                           <div key={index} className="bg-white rounded-lg p-3 border border-red-200">
-                            <div className="flex items-center justify-between">
-                              <p className="text-gray-700 font-medium flex-1 mr-4 ">{question}</p>
+                            <div className="flex items-center justify-between text-left">
+                              <p className="text-gray-700 font-medium flex-1 mr-4 text-left">{question}</p>
                               <div className={`px-3 py-1 rounded-lg font-medium ${oneExamples[index] === "yes"
                                 ? "bg-red-500 text-white"
                                 : "bg-green-500 text-white"

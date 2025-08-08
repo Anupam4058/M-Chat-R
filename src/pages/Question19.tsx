@@ -234,7 +234,7 @@ const Question19: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
                 19
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-left">
                 If something new happens, does {childName} look at your face to see how you feel about it?
               </h1>
             </div>
@@ -287,7 +287,7 @@ const Question19: React.FC = () => {
                   return (
                     <div key={idx} className={`${boxColor} border-2 rounded-lg p-6 mb-4`}>
                       <div className="flex items-center justify-between bg-white rounded-lg p-4 border ${borderColor} mb-3">
-                        <span className="text-gray-700 font-medium text-md">
+                        <span className="text-gray-700 font-medium text-md text-left">
                           {idx + 1}. {subQuestions[idx]}
                         </span>
                         <div className={`px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r ${badgeColor} text-white border shadow-lg`}>
@@ -311,7 +311,7 @@ const Question19: React.FC = () => {
                   
                   <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
                     <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-200 mb-3">
-                      <span className="text-gray-700 font-medium text-md">
+                      <span className="text-gray-700 font-medium text-md text-left">
                         1. {subQuestions[0]}
                       </span>
                       <div className="flex gap-2">
@@ -344,7 +344,7 @@ const Question19: React.FC = () => {
                   
                   <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
                     <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                      <span className="text-gray-700 font-medium text-md">
+                      <span className="text-gray-700 font-medium text-md text-left">
                         2. {subQuestions[1]}
                       </span>
                       <div className="flex gap-2">
@@ -377,7 +377,7 @@ const Question19: React.FC = () => {
                   
                   <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
                     <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-green-200 mb-3">
-                      <span className="text-gray-700 font-medium text-md">
+                      <span className="text-gray-700 font-medium text-md text-left">
                         3. {subQuestions[2]}
                       </span>
                       <div className="flex gap-2">
@@ -398,29 +398,6 @@ const Question19: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Result Display */}
-          {score !== null && (
-            <div className="mb-6 p-4 border rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">
-                {score === 0 ? (
-                  <span className="text-green-800">✅ PASS</span>
-                ) : (
-                  <span className="text-red-800">❌ FAIL</span>
-                )}
-              </h3>
-              <p className={`text-sm ${
-                score === 0 
-                  ? "text-green-700" 
-                  : "text-red-700"
-              }`}>
-                {score === 0 
-                  ? `${childName} shows appropriate social referencing behavior.` 
-                  : `${childName} may need further evaluation for social referencing.`
-                }
-              </p>
             </div>
           )}
 

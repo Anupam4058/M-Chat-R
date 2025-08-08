@@ -255,7 +255,7 @@ const Question20: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
                 20
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-left">
                 Does {childName} like movement activities?
               </h1>
             </div>
@@ -296,7 +296,7 @@ const Question20: React.FC = () => {
               
               <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
                 <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-blue-200 mb-3">
-                  <span className="text-gray-700 font-medium text-md">
+                  <span className="text-gray-700 font-medium text-md text-left">
                     Does {getPronoun("subject")} enjoy being bounced or swung?
                   </span>
                   {enjoyBouncedSwung !== null ? (
@@ -340,7 +340,7 @@ const Question20: React.FC = () => {
                   if (reactionAnswers[index] !== null && reactionAnswers[index] !== undefined) {
                     return (
                       <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                        <span className="text-gray-700 font-medium text-md">
+                        <span className="text-gray-700 font-medium text-md text-left">
                           {index + 1}. {question}
                         </span>
                         <div className="px-4 py-2 rounded-lg text-md font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-purple-500 shadow-lg">
@@ -355,7 +355,7 @@ const Question20: React.FC = () => {
                 {/* Current Question - Show only if not all questions are answered */}
                 {getAnsweredCount() < reactionQuestions.length && (
                   <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                    <span className="text-gray-700 font-medium text-md">
+                    <span className="text-gray-700 font-medium text-md text-left">
                       {getAnsweredCount() + 1}. {reactionQuestions[getAnsweredCount()]}
                     </span>
                     <div className="flex gap-2">

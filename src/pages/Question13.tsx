@@ -158,7 +158,7 @@ const Question13: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
                 13
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-left">
                 Does {childName} walk?
               </h1>
             </div>
@@ -194,7 +194,7 @@ const Question13: React.FC = () => {
               <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
                 {/* Follow-up Question Display */}
                 <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
-                  <span className="text-gray-700 font-medium text-md">
+                  <span className="text-gray-700 font-medium text-md text-left">
                     Does {getPronoun("subject")} walk without holding on to anything?
                   </span>
                   {followUpAnswer === null ? (

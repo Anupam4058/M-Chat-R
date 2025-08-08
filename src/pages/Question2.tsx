@@ -214,7 +214,7 @@ const Question2: React.FC = () => {
                 Does he/she...
               </h3>
               
-                             {/* Question 1 */}
+                {/* Question 1 */}
                <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200 mb-3">
                  <span className="text-gray-700 font-medium text-md">1. often ignore sounds</span>
                  {ignoreSounds === null ? (
@@ -239,7 +239,7 @@ const Question2: React.FC = () => {
                  )}
                </div>
 
-                             {/* Question 2 - Show if answered or current step is 1 or higher */}
+              {/* Question 2 - Show if answered or current step is 1 or higher */}
                {(currentStep >= 1 || ignorePeople !== null) && (
                  <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-purple-200">
                    <span className="text-gray-700 font-medium text-md">2. often ignore people</span>
