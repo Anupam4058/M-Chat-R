@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { saveQuestionResult, clearQuestionResult } from "../redux/Action";
+import { saveQuestionResult, clearQuestionResult, UserExampleAudio } from "../redux/Action";
 import { RootState } from "../redux/Store";
+import { useReactMediaRecorder } from "react-media-recorder";
 
 const Question14: React.FC = () => {
   const navigate = useNavigate();
@@ -44,6 +45,72 @@ const Question14: React.FC = () => {
   const [userExample, setUserExample] = useState<string>("");
   const [examplesSaved, setExamplesSaved] = useState<boolean>(false);
   const [noExamplesChecked, setNoExamplesChecked] = useState<boolean>(false);
+  const [userExampleAudio, setUserExampleAudio] = useState<UserExampleAudio | null>(null);
+  const [recordError, setRecordError] = useState<string | null>(null);
+  const [recordStartTs, setRecordStartTs] = useState<number | null>(null);
+  const [elapsedMs, setElapsedMs] = useState<number>(0);
+
+  const { status, startRecording, stopRecording, mediaBlobUrl } = useReactMediaRecorder({ audio: true, video: false });
+  const isRecording = status === "recording";
+
+  useEffect(() => {
+    let timer: any;
+    if (isRecording && recordStartTs) {
+      timer = setInterval(() => setElapsedMs(Date.now() - recordStartTs), 200);
+    }
+    return () => timer && clearInterval(timer);
+  }, [isRecording, recordStartTs]);
+
+  useEffect(() => {
+    if (!isRecording) {
+      setRecordStartTs(null);
+    }
+  }, [isRecording]);
+
+  const blobToDataUrl = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+  useEffect(() => {
+    const process = async () => {
+      try {
+        if (!mediaBlobUrl) return;
+        const resp = await fetch(mediaBlobUrl);
+        const blob = await resp.blob();
+        const dataUrl = await blobToDataUrl(blob);
+        const audio: UserExampleAudio = {
+          dataUrl,
+          mimeType: blob.type || "audio/webm",
+          durationMs: elapsedMs,
+          createdAt: new Date().toISOString(),
+        };
+        setUserExampleAudio(audio);
+        setNoExamplesChecked(false);
+      } catch (e) {
+        setRecordError("Failed to prepare audio preview.");
+      }
+    };
+    process();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaBlobUrl]);
+
+  const handleMicClick = async () => {
+    if (score !== null || examplesSaved || noExamplesChecked) return;
+    setRecordError(null);
+    try {
+      if (!isRecording) {
+        setRecordStartTs(Date.now());
+        await startRecording();
+      } else {
+        await stopRecording();
+      }
+    } catch (e) {
+      setRecordError("Microphone not available or permission denied.");
+    }
+  };
 
   const scenarios = [
     `When ${getPronoun("subject")} needs something?`,
@@ -84,6 +151,10 @@ const Question14: React.FC = () => {
           setExamplesSaved(true);
         }
       }
+      if (existingResult.userExampleAudio) {
+        setUserExampleAudio(existingResult.userExampleAudio);
+        setExamplesSaved(true);
+      }
       
       // Restore checkbox and saved states
       if (existingResult.noExamplesChecked !== undefined) {
@@ -117,6 +188,7 @@ const Question14: React.FC = () => {
       setUserExample("");
       setExamplesSaved(false);
       setNoExamplesChecked(false);
+      setUserExampleAudio(null);
     }
   }, [existingResult, isResetting]);
 
@@ -195,7 +267,8 @@ const Question14: React.FC = () => {
           undefined,
           noExamplesChecked ? "No examples provided" : (userExample || undefined),
           noExamplesChecked,
-          examplesSaved
+          examplesSaved,
+          userExampleAudio || undefined
         )
       );
     }
@@ -319,6 +392,8 @@ const Question14: React.FC = () => {
     return 0;
   };
 
+  const isExampleLocked = examplesSaved || noExamplesChecked;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
       <style>
@@ -411,31 +486,66 @@ const Question14: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Full width input field with mic button */}
+                {/* Full width input field with mic/recorder */}
                 <div className="space-y-4">
-                  <div className="relative">
-                    <textarea
-                      id="userExample"
-                      value={userExample}
-                      onChange={(e) => setUserExample(e.target.value)}
-                      placeholder="Enter your example here..."
-                      className={`w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
-                        score !== null ? 'bg-gray-100 cursor-not-allowed' : ''
-                      }`}
-                      rows={2}
-                      disabled={score !== null}
-                    />
-                    
-                    {/* Microphone button positioned at bottom right */}
-                    <button
-                      className="absolute right-3 bottom-3 w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors"
-                      disabled={score !== null}
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
+                  {!userExampleAudio ? (
+                    <div className="relative">
+                      <textarea
+                        id="userExample"
+                        value={userExample}
+                        onChange={(e) => setUserExample(e.target.value)}
+                        placeholder="Enter your example here..."
+                        className={`w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
+                          (score !== null || isExampleLocked) ? 'bg-gray-100 cursor-not-allowed' : ''
+                        }`}
+                        rows={2}
+                        disabled={score !== null || isExampleLocked}
+                      />
+                      {/* Mic / Stop inside textarea */}
+                      <button
+                        type="button"
+                        onClick={handleMicClick}
+                        disabled={score !== null || isExampleLocked}
+                        className={`absolute right-3 bottom-3 w-7 h-7 rounded-full flex items-center justify-center ${(score !== null || isExampleLocked) ? 'text-gray-300' : isRecording ? 'bg-red-600 text-white animate-pulse' : 'text-gray-600 hover:text-gray-800'}`}
+                        title={isRecording ? 'Stop recording' : 'Start recording'}
+                      >
+                        {isRecording ? (
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="6" width="12" height="12" rx="2" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                      {isRecording && (
+                        <div className="absolute left-3 bottom-3 text-xs text-red-700 font-medium">
+                          Rec {Math.floor(elapsedMs / 1000)}s
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-purple-700 font-medium">Audio example:</p>
+                        <button
+                          type="button"
+                          onClick={() => { setUserExampleAudio(null); setElapsedMs(0); setExamplesSaved(false); setCurrentSection("example"); }}
+                          className="inline-flex items-center gap-1 px-2 py-1 border border-purple-300 rounded-md text-xs text-purple-700 hover:bg-purple-100"
+                          disabled={score !== null || isExampleLocked}
+                        >
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm2 4h14l-1.5 10.5A2 2 0 0115.52 22H8.48a2 2 0 01-1.98-1.5L5 10z"/></svg>
+                          Discard
+                        </button>
+                      </div>
+                      <audio controls src={userExampleAudio.dataUrl} className="w-full mt-2" />
+                      <div className="text-xs text-gray-600 mt-1">{Math.round((userExampleAudio.durationMs || 0) / 1000)}s</div>
+                    </div>
+                  )}
+                  {recordError && (
+                    <div className="text-xs text-red-600">{recordError}</div>
+                  )}
                 </div>
               </div>
               
@@ -452,17 +562,19 @@ const Question14: React.FC = () => {
                       // When checkbox is checked, set saved state to true
                       if (e.target.checked) {
                         setExamplesSaved(true);
+                        setUserExampleAudio(null);
                       } else {
                         // When unchecked, clear the saved state but keep the example box visible
                         setExamplesSaved(false);
                         setUserExample("");
+                        setUserExampleAudio(null);
                         // Reset current section back to example to hide follow-up questions
                         setCurrentSection("example");
                       }
                     }}
-                    disabled={score !== null}
+                    disabled={score !== null || isExampleLocked}
                     className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
-                      score !== null ? 'cursor-not-allowed opacity-50' : ''
+                      (score !== null || isExampleLocked) ? 'cursor-not-allowed opacity-50' : ''
                     }`}
                   />
                   <label htmlFor="noExamples" className="text-sm text-gray-700">
@@ -474,14 +586,14 @@ const Question14: React.FC = () => {
                 <button
                   onClick={() => {
                     // Save the example and set saved state
-                    if (userExample.trim() !== "") {
+                    if (userExample.trim() !== "" || userExampleAudio) {
                       setExamplesSaved(true);
-                      console.log('Saving example:', userExample);
+                      setCurrentSection("scenarios");
                     }
                   }}
-                  disabled={userExample.trim() === "" || score !== null}
+                  disabled={(userExample.trim() === "" && !userExampleAudio && !noExamplesChecked) || score !== null || isExampleLocked}
                   className={`px-6 py-2 text-sm rounded-md transition-colors shadow-sm font-medium ${
-                    userExample.trim() === "" || score !== null
+                    (userExample.trim() === "" && !userExampleAudio && !noExamplesChecked) || score !== null || isExampleLocked
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
                       : examplesSaved
                         ? "bg-blue-600 text-white hover:bg-blue-700"

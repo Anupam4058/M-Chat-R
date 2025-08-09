@@ -330,6 +330,9 @@ const Question17: React.FC = () => {
     return 0;
   };
 
+  // Lock the example UI once saved or marked as no-example
+  const isExampleLocked = examplesSaved || noExamplesChecked;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200">
       <style>
@@ -432,17 +435,17 @@ const Question17: React.FC = () => {
                         onChange={(e) => setUserExample(e.target.value)}
                         placeholder="Enter your example here..."
                         className={`w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
-                          score !== null ? 'bg-gray-100 cursor-not-allowed' : ''
+                          (score !== null || isExampleLocked) ? 'bg-gray-100 cursor-not-allowed' : ''
                         }`}
                         rows={2}
-                        disabled={score !== null}
+                        disabled={score !== null || isExampleLocked}
                       />
                       {/* Mic / Stop inside textarea */}
                       <button
                         type="button"
                         onClick={handleMicClick}
-                        disabled={score !== null || noExamplesChecked}
-                        className={`absolute right-3 bottom-3 w-7 h-7 rounded-full flex items-center justify-center ${score !== null || noExamplesChecked ? 'text-gray-300' : isRecording ? 'bg-red-600 text-white animate-pulse' : 'text-gray-600 hover:text-gray-800'}`}
+                        disabled={score !== null || isExampleLocked}
+                        className={`absolute right-3 bottom-3 w-7 h-7 rounded-full flex items-center justify-center ${(score !== null || isExampleLocked) ? 'text-gray-300' : isRecording ? 'bg-red-600 text-white animate-pulse' : 'text-gray-600 hover:text-gray-800'}`}
                         title={isRecording ? 'Stop recording' : 'Start recording'}
                       >
                         {isRecording ? (
@@ -469,7 +472,7 @@ const Question17: React.FC = () => {
                           type="button"
                           onClick={() => { setUserExampleAudio(null); setElapsedMs(0); setExamplesSaved(false); setCurrentSection("example"); }}
                           className="inline-flex items-center gap-1 px-2 py-1 border border-purple-300 rounded-md text-xs text-purple-700 hover:bg-purple-100"
-                          disabled={score !== null}
+                          disabled={score !== null || isExampleLocked}
                         >
                           <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm2 4h14l-1.5 10.5A2 2 0 0115.52 22H8.48a2 2 0 01-1.98-1.5L5 10z"/></svg>
                           Discard
@@ -508,9 +511,9 @@ const Question17: React.FC = () => {
                         setCurrentSection("example");
                       }
                     }}
-                    disabled={score !== null}
+                    disabled={score !== null || isExampleLocked}
                     className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
-                      score !== null ? 'cursor-not-allowed opacity-50' : ''
+                      (score !== null || isExampleLocked) ? 'cursor-not-allowed opacity-50' : ''
                     }`}
                   />
                   <label htmlFor="noExamples" className="text-sm text-gray-700">
@@ -529,9 +532,9 @@ const Question17: React.FC = () => {
                       setCurrentSection("attention");
                     }
                   }}
-                  disabled={(userExample.trim() === "" && !userExampleAudio && !noExamplesChecked) || score !== null}
+                  disabled={(userExample.trim() === "" && !userExampleAudio && !noExamplesChecked) || score !== null || isExampleLocked}
                   className={`px-6 py-2 text-sm rounded-md transition-colors shadow-sm font-medium ${
-                    (userExample.trim() === "" && !userExampleAudio && !noExamplesChecked) || score !== null
+                    (userExample.trim() === "" && !userExampleAudio && !noExamplesChecked) || score !== null || isExampleLocked
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
                       : examplesSaved
                         ? "bg-blue-600 text-white hover:bg-blue-700"
