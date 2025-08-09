@@ -4,7 +4,7 @@
  */
 
 import { AnswerState } from "../types";
-import { ActionTypes, ChildInfoData } from "./Action";
+import { ActionTypes, ChildInfoData, UserExampleAudio } from "./Action";
 
 // Answer entry interface for storing question answers
 interface AnswerEntry {
@@ -22,6 +22,7 @@ interface QuestionResult {
   userExample?: string;
   noExamplesChecked?: boolean;
   examplesSaved?: boolean;
+    userExampleAudio?: UserExampleAudio;
   completed: boolean;
 }
 
@@ -85,6 +86,7 @@ const handleAnswers = (state: AnswersState = initialState, action: ActionTypes):
         userExample: action.payload.userExample,
         noExamplesChecked: action.payload.noExamplesChecked,
         examplesSaved: action.payload.examplesSaved,
+        userExampleAudio: action.payload.userExampleAudio,
         completed: true,
       };
       

@@ -326,10 +326,10 @@ const Question15: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* Left side - Description box */}
                   <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2 text-left">
                       Describe {childName}'s behavior
                     </h4>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 text-left">
                       When {childName} tries to copy you:
                     </p>
                   </div>
@@ -339,7 +339,7 @@ const Question15: React.FC = () => {
                     <div className="w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center">
                       <span className="text-xs font-bold">i</span>
                     </div>
-                    <span className="text-xs text-gray-900">
+                    <span className="text-xs text-gray-900 text-left">
                       This helps us understand {childName}'s specific copying behaviors.
                     </span>
                   </div>
@@ -356,7 +356,7 @@ const Question15: React.FC = () => {
                       className={`w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
                         score !== null ? 'bg-gray-100 cursor-not-allowed' : ''
                       }`}
-                      rows={4}
+                      rows={2}
                       disabled={score !== null}
                     />
                     

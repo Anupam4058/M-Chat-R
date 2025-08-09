@@ -10,6 +10,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/Store";
+import { UserExampleAudio } from "../redux/Action";
 import PDFDownload from "../component/PDFDownload";
 import QuestionsData from "../data/questionsData";
 
@@ -22,6 +23,7 @@ interface QuestionResult {
   userExample?: string;
   noExamplesChecked?: boolean;
   examplesSaved?: boolean;
+  userExampleAudio?: UserExampleAudio;
   completed: boolean;
 }
 
@@ -131,10 +133,23 @@ const Result = () => {
                         {personalizedTitle}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
-                        {result.userExample ? (
-                          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                            <p className="text-xs text-blue-600 font-medium mb-1">User's Example:</p>
-                            <p className="text-sm text-gray-800 italic">"{result.userExample}"</p>
+                        {(result.userExample || result.userExampleAudio) ? (
+                          <div className="space-y-2">
+                            {result.userExample && (
+                              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                <p className="text-xs text-blue-600 font-medium mb-1">Text example:</p>
+                                <p className="text-sm text-gray-800 italic">"{result.userExample}"</p>
+                              </div>
+                            )}
+                            {result.userExampleAudio && (
+                              <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                                <p className="text-xs text-purple-700 font-medium mb-2">Audio example:</p>
+                                <audio controls src={result.userExampleAudio.dataUrl} className="w-full" />
+                                <div className="text-xs text-gray-600 mt-1">
+                                  {Math.round(result.userExampleAudio.durationMs / 1000)}s
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span className="text-gray-400 text-xs">No examples provided</span>

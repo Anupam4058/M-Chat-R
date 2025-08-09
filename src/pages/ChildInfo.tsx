@@ -171,7 +171,7 @@ const ChildInfo: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200 flex flex-col items-center justify-center py-8 px-2">
-      <div className="w-full max-w-2xl bg-white/80 rounded-2xl shadow-2xl p-6 md:p-10">
+      <div className="w-full max-w-5xl bg-white/80 rounded-2xl shadow-2xl p-6 md:p-10">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-600 bg-clip-text text-transparent mb-2">
             Child Information
@@ -189,9 +189,9 @@ const ChildInfo: React.FC = () => {
               Guardian Information
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div>
-                <label htmlFor="guardianName" className="block text-sm font-medium text-indigo-700 mb-2">
+                <label htmlFor="guardianName" className="block text-sm font-semibold text-indigo-700 mb-2 text-left">
                   Guardian Name *
                 </label>
                 <input
@@ -213,7 +213,7 @@ const ChildInfo: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="guardianPhone" className="block text-sm font-medium text-indigo-700 mb-2">
+                <label htmlFor="guardianPhone" className="block text-sm font-semibold text-indigo-700 mb-2 text-left">
                   Phone Number *
                 </label>
                 <input
@@ -232,7 +232,7 @@ const ChildInfo: React.FC = () => {
                     {errors.guardianPhone}
                   </p>
                 )}
-                <p className="text-xs text-indigo-600 mt-2">
+                <p className="text-xs text-indigo-600 mt-2 text-left">
                   Enter Phone Number.
                 </p>
               </div>
@@ -246,9 +246,9 @@ const ChildInfo: React.FC = () => {
               Child Information
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div>
-                <label htmlFor="childName" className="block text-sm font-medium text-purple-700 mb-2">
+                <label htmlFor="childName" className="block text-sm font-semibold text-purple-700 mb-2 text-left">
                   Child's Name *
                 </label>
                 <input
@@ -270,10 +270,10 @@ const ChildInfo: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-purple-700 mb-2">
+                <label className="block text-sm font-semibold text-purple-700 mb-2 text-left">
                   Gender *
                 </label>
-                <div className="flex space-x-6 justify-center bg-white/70 rounded-lg p-3 border border-purple-300">
+                <div className="flex space-x-6 justify-left bg-white/70 rounded-lg p-3 gap-10 border border-purple-300">
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="radio"
@@ -306,9 +306,9 @@ const ChildInfo: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-6">
               <div>
-                <label htmlFor="dateOfBirth" className="block text-sm font-medium text-purple-700 mb-2">
+                <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-purple-700 mb-2 text-left">
                   Date of Birth *
                 </label>
                 <input
@@ -326,13 +326,13 @@ const ChildInfo: React.FC = () => {
                     {errors.dateOfBirth}
                   </p>
                 )}
-                <p className="text-xs text-purple-600 mt-2">
+                <p className="text-xs text-purple-600 mt-2 text-left">
                   Child must be between 16-30 months old
                 </p>
               </div>
 
               <div>
-                <label htmlFor="city" className="block text-sm font-medium text-purple-700 mb-2">
+                <label htmlFor="city" className="block text-sm font-semibold text-purple-700 mb-2 text-left">
                   City *
                 </label>
                 <input

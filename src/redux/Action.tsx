@@ -5,6 +5,14 @@
 
 import { questionType, AnswerState } from "../types";
 
+// Optional audio example payload stored with results
+export type UserExampleAudio = {
+  dataUrl: string;      // base64 data URL (e.g., audio/webm)
+  mimeType: string;     // e.g., "audio/webm"
+  durationMs: number;   // duration in milliseconds
+  createdAt: string;    // ISO timestamp
+};
+
 // Child information interface
 export interface ChildInfoData {
   guardianName: string;
@@ -24,7 +32,7 @@ interface State extends questionType {
 export type ActionTypes = 
   | { type: "update_answer"; payload: { index: number; answer: AnswerState } }
   | { type: "SET_CURRENT_QUESTION"; payload: number }
-  | { type: "SAVE_QUESTION_RESULT"; payload: { questionId: number; result: "pass" | "fail"; mainAnswer: "yes" | "no"; subAnswers: ("yes" | "no" | "zero" | "one" | "normal" | "below-normal" | "inconclusive")[]; mostOften?: "zero" | "one"; userExample?: string; noExamplesChecked?: boolean; examplesSaved?: boolean } }
+  | { type: "SAVE_QUESTION_RESULT"; payload: { questionId: number; result: "pass" | "fail"; mainAnswer: "yes" | "no"; subAnswers: ("yes" | "no" | "zero" | "one" | "normal" | "below-normal" | "inconclusive")[]; mostOften?: "zero" | "one"; userExample?: string; noExamplesChecked?: boolean; examplesSaved?: boolean; userExampleAudio?: UserExampleAudio } }
   | { type: "SAVE_COMPLEX_QUESTION_RESULT"; payload: { questionId: number; result: "pass" | "fail"; mainAnswer: "yes" | "no"; complexData: any } }
   | { type: "CLEAR_QUESTION_RESULT"; payload: { questionId: number } }
   | { type: "SET_QUESTION_COMPLETED"; payload: { questionId: number; completed: boolean } }
@@ -68,10 +76,11 @@ export const saveQuestionResult = (
   mostOften?: "zero" | "one",
   userExample?: string,
   noExamplesChecked?: boolean,
-  examplesSaved?: boolean
+  examplesSaved?: boolean,
+  userExampleAudio?: UserExampleAudio
 ): ActionTypes => ({
   type: "SAVE_QUESTION_RESULT",
-  payload: { questionId, result, mainAnswer, subAnswers, mostOften, userExample, noExamplesChecked, examplesSaved }
+  payload: { questionId, result, mainAnswer, subAnswers, mostOften, userExample, noExamplesChecked, examplesSaved, userExampleAudio }
 });
 
 /**

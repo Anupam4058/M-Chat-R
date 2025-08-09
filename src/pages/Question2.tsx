@@ -203,12 +203,6 @@ const Question2: React.FC = () => {
         {/* Initial Assessment Questions - Both questions in same container */}
         {(currentStep >= 0 || ignoreSounds !== null) && (
           <div className="mb-8">
-            {/* <div className="text-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">
-                Initial Assessment
-              </h3>
-            </div> */}
-
             <div className="bg-purple-100 border border-purple-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
                 Does he/she...

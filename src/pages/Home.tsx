@@ -20,9 +20,9 @@ const Home = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-200 flex flex-col items-center justify-center py-8 px-2">
-      <div className="w-full max-w-4xl bg-white/80 rounded-2xl shadow-2xl p-6 md:p-10">
+      <div className="w-full max-w-5xl bg-white/80 rounded-2xl shadow-2xl p-6 md:p-10">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-5xl md:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-600 bg-clip-text text-transparent mb-4">
             M-CHAT Assessment
           </h1>
           <p className="text-xl text-gray-600 font-medium">
